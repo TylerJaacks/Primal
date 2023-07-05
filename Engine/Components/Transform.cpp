@@ -12,7 +12,7 @@ namespace primal::transform
 
 	component create_transform(const init_info& info, game_entity::entity entity)
 	{
-		assert(entity.is_valid());
+		//assert(entity.is_valid());
 
 		const id::id_type entity_index{ id::index(entity.get_id()) };
 
@@ -24,7 +24,7 @@ namespace primal::transform
 		}
 		else
 		{
-			assert(positions.size() == entity_index);
+			//assert(positions.size() == entity_index);
 
 			rotations.emplace_back(info.rotation);
 			positions.emplace_back(info.position);
@@ -36,24 +36,24 @@ namespace primal::transform
 
 	void remove_transform(const component component)
 	{
-		assert(component.is_valid());
+		//assert(component.is_valid());
 	}
 
 	math::v3 component::position() const
 	{
-		assert(is_valid());
+		//assert(is_valid());
 		return positions[id::index(id_)];
 	}
 
 	math::v4 component::rotation() const
 	{
-		assert(is_valid());
+		//assert(is_valid());
 		return rotations[id::index(id_)];
 	}
 
 	math::v3 component::scale() const
 	{
-		assert(is_valid());
+		//assert(is_valid());
 		return scales[id::index(id_)];
 	}
 }

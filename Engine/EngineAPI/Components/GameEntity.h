@@ -2,22 +2,19 @@
 
 #include "../EngineAPI/Components/TransformComponent.h"
 
-namespace primal::game_entity
-{
+namespace primal::game_entity {
+
 	DEFINE_TYPED_ID(entity_id);
 
-	class entity
-	{
+	class entity {
 	public:
-		constexpr explicit entity(entity_id id) : id_{ id } { }
-		constexpr entity() : id_{ id::invalid_id } { }
+		constexpr explicit entity(entity_id id) : _id{ id } {}
+		constexpr entity() : _id{ id::invalid_id } {}
+		constexpr entity_id get_id() const { return _id; }
+		constexpr bool is_valid() const { return id::is_valid(_id); }
 
-		[[nodiscard]] constexpr entity_id get_id() const { return id_; }
-		[[nodiscard]] constexpr bool is_valid() const { return id_ != id::invalid_id; }
-
-		[[nodiscard]] transform::component transform() const;
-
+		transform::component transform() const;
 	private:
-		entity_id id_;
+		entity_id _id;
 	};
 }

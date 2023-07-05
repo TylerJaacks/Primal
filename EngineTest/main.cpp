@@ -8,6 +8,13 @@
 #error On of the tests needs to be enabled.
 #endif
 
+#include "../Engine/Common/CommonHeaders.h"
+#include "../Engine/Components/Entity.h"
+#include "../Engine/Components/Transform.h"
+
+using namespace primal;
+using namespace primal::game_entity;
+
 int main()
 {
 #if _DEBUG

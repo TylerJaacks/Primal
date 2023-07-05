@@ -4,7 +4,9 @@
 namespace primal {
 
 #define INIT_INFO(component) namespace component { struct init_info; }
+
 	INIT_INFO(transform);
+
 #undef INIT_INFO
 
 	namespace game_entity
@@ -18,6 +20,6 @@ namespace primal {
 
 		void remove_game_entity(entity entity);
 
-		bool is_active(entity entity);
+		bool is_alive(entity entity);
 	};
 };
