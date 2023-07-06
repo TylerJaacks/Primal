@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Arash Khatami
 // Distributed under the MIT license. See the LICENSE file in the project root for more information.
+using PrimalEditor.GameProject;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,16 +15,24 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace PrimalEditor.Utilities
+namespace PrimalEditor.Editors
 {
     /// <summary>
-    /// Interaction logic for UndoRedoView.xaml
+    /// Interaction logic for WorldEditorView.xaml
     /// </summary>
-    public partial class UndoRedoView : UserControl
+    public partial class WorldEditorView : UserControl
     {
-        public UndoRedoView()
+        public WorldEditorView()
         {
             InitializeComponent();
+            Loaded += OnWorldEditorViewLoaded;
+        }
+
+        private void OnWorldEditorViewLoaded(object sender, RoutedEventArgs e)
+        {
+            Loaded -= OnWorldEditorViewLoaded;
+            Focus();
+            ((INotifyCollectionChanged)Project.UndoRedo.UndoList).CollectionChanged += (s, e) => Focus();
         }
     }
 }

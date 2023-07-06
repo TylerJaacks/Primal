@@ -1,121 +1,124 @@
-﻿using PrimalEditor.Common;
+﻿// Copyright (c) Arash Khatami
+// Distributed under the MIT license. See the LICENSE file in the project root for more information.
 using PrimalEditor.Components;
 using PrimalEditor.Utilities;
+using System;
+using System.CodeDom;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
+using System.Text;
 using System.Windows.Input;
 
-namespace PrimalEditor.GameProject;
-
-[DataContract()]
-public class Scene : ViewModelBase
+namespace PrimalEditor.GameProject
 {
-    private string _name;
-
-    [DataMember()]
-    public string Name
+    [DataContract]
+    class Scene : ViewModelBase
     {
-        get => _name;
-        set
+        private string _name;
+        [DataMember]
+        public string Name
         {
-            if (_name == value) return;
-
-            _name = value;
-
-            OnPropertyChanged(nameof(Name));
-        }
-    }
-
-    [DataMember()]
-    public Project Project { get; private set; }
-
-    [DataMember(Name = nameof(GameEntities))]
-    private readonly ObservableCollection<GameEntity> _gameEntities = new();
-
-    public ReadOnlyObservableCollection<GameEntity> GameEntities { get; private set; }
-
-    private bool _isActive;
-
-    [DataMember]
-    public bool IsActive
-    {
-        get => _isActive;
-        set
-        {
-            if (_isActive != value)
+            get => _name;
+            set
             {
-                _isActive = value;
-
-                OnPropertyChanged(nameof(IsActive));
+                if (_name != value)
+                {
+                    _name = value;
+                    OnPropertyChanged(nameof(Name));
+                }
             }
         }
-    }
 
+        [DataMember]
+        public Project Project { get; private set; }
 
-    private void AddGameEntity(GameEntity gameEntity)
-    {
-        Debug.Assert(!_gameEntities.Contains(gameEntity));
-
-        _gameEntities.Add(gameEntity);
-    }
-
-    private void RemoveGameEntity(GameEntity gameEntity)
-    {
-        Debug.Assert(_gameEntities.Contains(gameEntity));
-
-        _gameEntities.Remove(gameEntity);
-    }
-
-
-    public ICommand AddGameEntityCommand { get; set; }
-    public ICommand RemoveGameEntityCommand { get; set; }
-
-
-    [OnDeserialized]
-    private void OnDeserialized(StreamingContext context)
-    {
-        if (_gameEntities != null)
+        private bool _isActive;
+        [DataMember]
+        public bool IsActive
         {
-            GameEntities = new ReadOnlyObservableCollection<GameEntity>(_gameEntities);
-
-            OnPropertyChanged(nameof(GameEntities));
+            get => _isActive;
+            set
+            {
+                if (_isActive != value)
+                {
+                    _isActive = value;
+                    OnPropertyChanged(nameof(IsActive));
+                }
+            }
         }
 
-        AddGameEntityCommand = new RelayCommand<GameEntity>(x =>
+        [DataMember(Name = nameof(GameEntities))]
+        private readonly ObservableCollection<GameEntity> _gameEntities = new ObservableCollection<GameEntity>();
+        public ReadOnlyObservableCollection<GameEntity> GameEntities { get; private set; }
+
+        public ICommand AddGameEntityCommand { get; private set; }
+        public ICommand RemoveGameEntityCommand { get; private set; }
+
+        private void AddGameEnity(GameEntity entity, int index = -1)
         {
-            AddGameEntity(x);
+            Debug.Assert(!_gameEntities.Contains(entity));
+            entity.IsActive = IsActive;
+            if (index == -1)
+            {
+                _gameEntities.Add(entity);
+            }
+            else
+            {
+                _gameEntities.Insert(index, entity);
+            }
+        }
 
-            var gameEntityIndex = _gameEntities.IndexOf(x);
-
-            Project.UndoRedo.Add(new UndoRedoAction(
-                $"Add {x.Name} to {Name}",
-                () => RemoveGameEntity(x),
-                () => _gameEntities.Insert(gameEntityIndex, x)));
-
-        });
-
-        RemoveGameEntityCommand = new RelayCommand<GameEntity>(x =>
+        private void RemoveGameEnity(GameEntity entity)
         {
-            var gameEntityIndex = _gameEntities.IndexOf(x);
+            Debug.Assert(_gameEntities.Contains(entity));
+            entity.IsActive = false;
+            _gameEntities.Remove(entity);
+        }
 
-            RemoveGameEntity(x);
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            if (_gameEntities != null)
+            {
+                GameEntities = new ReadOnlyObservableCollection<GameEntity>(_gameEntities);
+                OnPropertyChanged(nameof(GameEntities));
+            }
+            foreach (var entity in _gameEntities)
+            {
+                entity.IsActive = IsActive;
+            }
 
-            Project.UndoRedo.Add(new UndoRedoAction(
-                $"Remove {x.Name} to {Name}",
-                () => _gameEntities.Insert(gameEntityIndex, x),
-                () => RemoveGameEntity(x)));
+            AddGameEntityCommand = new RelayCommand<GameEntity>(x =>
+            {
+                AddGameEnity(x);
+                var entityIndex = _gameEntities.Count - 1;
 
-        });
-    }
+                Project.UndoRedo.Add(new UndoRedoAction(
+                    () => RemoveGameEnity(x),
+                    () => AddGameEnity(x, entityIndex),
+                    $"Add {x.Name} to {Name}"));
+            });
 
-    public Scene(Project project, string name)
-    {
-        Debug.Assert(project != null);
+            RemoveGameEntityCommand = new RelayCommand<GameEntity>(x =>
+            {
+                var entityIndex = _gameEntities.IndexOf(x);
+                RemoveGameEnity(x);
 
-        Project = project;
-        Name = name;
+                Project.UndoRedo.Add(new UndoRedoAction(
+                    () => AddGameEnity(x, entityIndex),
+                    () => RemoveGameEnity(x),
+                    $"Remove {x.Name}"));
+            });
+        }
 
-        OnDeserialized(new StreamingContext());
+        public Scene(Project project, string name)
+        {
+            Debug.Assert(project != null);
+            Project = project;
+            Name = name;
+            OnDeserialized(new StreamingContext());
+        }
     }
 }
