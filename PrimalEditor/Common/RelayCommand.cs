@@ -1,32 +1,37 @@
-﻿using System;
+﻿// Copyright (c) Arash Khatami
+// Distributed under the MIT license. See the LICENSE file in the project root for more information.
+using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Windows.Input;
 
-namespace PrimalEditor;
-
-public class RelayCommand<T> : ICommand
+namespace PrimalEditor
 {
-    private readonly Action<T> _execute;
-    private readonly Predicate<T> _canExecute;
-
-    public event EventHandler CanExecuteChanged
+    class RelayCommand<T> : ICommand
     {
-        add => CommandManager.RequerySuggested += value;
-        remove => CommandManager.RequerySuggested -= value;
-    }
+        private readonly Action<T> _execute;
+        private readonly Predicate<T> _canExecute;
 
-    public bool CanExecute(object parameter)
-    {
-        return _canExecute?.Invoke((T)parameter) ?? true;
-    }
+        public event EventHandler CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
+        }
 
-    public void Execute(object parameter)
-    {
-        _execute((T)parameter);
-    }
+        public bool CanExecute(object parameter)
+        {
+            return _canExecute?.Invoke((T)parameter) ?? true;
+        }
 
-    public RelayCommand(Action<T> execute, Predicate<T> canExecute = null)
-    {
-        _execute = execute ?? throw new ArgumentNullException(nameof(execute));
-        _canExecute = canExecute;
+        public void Execute(object parameter)
+        {
+            _execute((T)parameter);
+        }
+
+        public RelayCommand(Action<T> execute, Predicate<T> canExecute = null)
+        {
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
+            _canExecute = canExecute;
+        }
     }
 }

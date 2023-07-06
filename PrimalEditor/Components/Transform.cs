@@ -1,61 +1,63 @@
-﻿using System.Numerics;
+﻿// Copyright (c) Arash Khatami
+// Distributed under the MIT license. See the LICENSE file in the project root for more information.
+using System;
+using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.Serialization;
+using System.Text;
 
-namespace PrimalEditor.Components;
-
-[DataContract]
-public class Transform : Component
+namespace PrimalEditor.Components
 {
-    private Vector3 _position;
-
-    [DataMember]
-    public Vector3 Position
+    [DataContract]
+    class Transform : Component
     {
-        get => _position;
-        set
+        private Vector3 _position;
+        [DataMember]
+        public Vector3 Position
         {
-            if (_position != value)
+            get => _position;
+            set
             {
-                _position = value;
-                OnPropertyChanged(nameof(Position));
+                if (_position != value)
+                {
+                    _position = value;
+                    OnPropertyChanged(nameof(Position));
+                }
             }
         }
-    }
 
-    private Vector3 _rotation;
-
-    [DataMember]
-    public Vector3 Rotation
-    {
-        get => _rotation;
-        set
+        private Vector3 _rotation;
+        [DataMember]
+        public Vector3 Rotation
         {
-            if (_rotation != value)
+            get => _rotation;
+            set
             {
-                _rotation = value;
-                OnPropertyChanged(nameof(Rotation));
+                if (_rotation != value)
+                {
+                    _rotation = value;
+                    OnPropertyChanged(nameof(Rotation));
+                }
             }
         }
-    }
 
-    private Vector3 _scale;
-
-    [DataMember]
-    public Vector3 Scale
-    {
-        get => _scale;
-        set
+        private Vector3 _scale;
+        [DataMember]
+        public Vector3 Scale
         {
-            if (_scale != value)
+            get => _scale;
+            set
             {
-                _scale = value;
-                OnPropertyChanged(nameof(Scale));
+                if (_scale != value)
+                {
+                    _scale = value;
+                    OnPropertyChanged(nameof(Scale));
+                }
             }
         }
-    }
 
-    public Transform(GameEntity owner) : base(owner)
-    {
-
+        public Transform(GameEntity owner) : base(owner)
+        {
+        }
     }
 }
