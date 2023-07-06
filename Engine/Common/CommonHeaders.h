@@ -1,16 +1,19 @@
+// Copyright (c) Arash Khatami
+// Distributed under the MIT license. See the LICENSE file in the project root for more information.
 #pragma once
 
-#pragma warning(disable: 4530)
+#pragma warning(disable: 4530) // disable exception warning
 
-#include <cstdint>
-#include <cassert>
-#include <type_traits>
+// C/C++
+#include <stdint.h>
+#include <assert.h>
+#include <typeinfo>
 
 #if defined(_WIN64)
-#include <DirectxMath.h>
+#include <DirectXMath.h>
 #endif
 
-#include "Types.h"
-
-#include "../Utilities/Utilities.h"
-#include "../Utilities/MathTypes.h"
+// common headers
+#include "..\Utilities\Utilities.h"
+#include "..\Utilities\MathTypes.h"
+#include "PrimitiveTypes.h"

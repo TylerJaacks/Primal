@@ -1,29 +1,29 @@
+// Copyright (c) Arash Khatami
+// Distributed under the MIT license. See the LICENSE file in the project root for more information.
 #pragma once
 
 #define USE_STL_VECTOR 1
 #define USE_STL_DEQUE 1
 
-#ifdef USE_STL_VECTOR
+#if USE_STL_VECTOR
 #include <vector>
-
-namespace primal::util
-{
-	template<typename T>
-	using vector = typename std::vector<T>;
+namespace primal::utl {
+template<typename T>
+using vector = std::vector<T>;
 }
 #endif
 
-#ifdef USE_STL_DEQUE
+#if USE_STL_DEQUE
 #include <deque>
-
-namespace primal::util
-{
-	template<typename T>
-	using deque = typename std::deque<T>;
+namespace primal::utl {
+template<typename T>
+using deque = std::deque<T>;
 }
 #endif
 
-namespace primal::util
-{
-	// TODO: implement our own containers.
+
+namespace primal::utl {
+
+// TODO: implement our own containers
+
 }

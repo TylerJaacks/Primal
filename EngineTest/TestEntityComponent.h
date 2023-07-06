@@ -22,22 +22,16 @@ public:
 
 	bool run() override
 	{
-		u32 i = 0;
-
-		do
-		{
-			for (u32 i { 0 }; i < 10; ++i)
+		do {
+			for (u32 i{ 0 }; i < 10000; ++i)
 			{
 				create_random();
 				remove_random();
-
-				num_entries_ = (u32) entities_.size();
+				_num_entities = (u32)_entities.size();
 			}
 
-			i++;
-
 			print_results();
-		} while (i == 1);
+		} while (getchar() != 'q');
 
 		return true;
 	}
@@ -48,32 +42,35 @@ private:
 	void create_random()
 	{
 		u32 count = rand() % 20;
-
-		if (!entities_.empty()) count = 1000;
-
-		transform::init_info transform_info { };
-
-		game_entity::entity_info entity_info 
-		{ 
-			&transform_info 
+		if (_entities.empty()) count = 1000;
+		transform::init_info transform_info{};
+		game_entity::entity_info entity_info
+		{
+			&transform_info,
 		};
 
 		while (count > 0)
 		{
-			++added_;
+			
 
-			game_entity::entity entity { game_entity::create_game_entity(entity_info) };
+			game_entity::entity entity{ game_entity::create_game_entity(entity_info) };
 
-			printf("Entity: %d\n", entity.get_id());
+			// 536878688
 
-			if (entity.get_id() >= 4294967295)
-			{
-				printf("ERROR!\n");
+			if (entity.is_valid()) {
+				printf("ERROR 1!\n");
+			}
+			
+			if (id::is_valid(entity.get_id())) {
+				printf("ERROR 1!\n");
 			}
 
-			// assert(entity.is_valid() && id::is_valid(entity.get_id()));
 
-			entities_.push_back(entity);
+			++_added;
+
+			//assert(entity.is_valid() && id::is_valid(entity.get_id()));
+
+			_entities.push_back(entity);
 
 			//assert(game_entity::is_alive(entity));
 
@@ -84,26 +81,25 @@ private:
 	void remove_random()
 	{
 		u32 count = rand() % 20;
-
-		if (!entities_.empty()) count = 1000;
-
+		
+		if (_entities.size() < 1000) return;
+		
 		while (count > 0)
 		{
-			++remove_;
-
-			const u32 index{ static_cast<u32>(rand()) % static_cast<u32>(entities_.size()) };
-
-			const game_entity::entity entity { entities_[index] };
-
+			const u32 index{ (u32)rand() % (u32)_entities.size() };
+			const game_entity::entity entity{ _entities[index] };
+			
 			//assert(entity.is_valid() && id::is_valid(entity.get_id()));
-
+			
 			if (entity.is_valid())
 			{
 				game_entity::remove_game_entity(entity);
-
-				entities_.erase(entities_.begin() + index);
-
+				
+				_entities.erase(_entities.begin() + index);
+				
 				//assert(!game_entity::is_alive(entity));
+				
+				++_removed;
 			}
 
 			--count;
@@ -112,13 +108,13 @@ private:
 
 	void print_results()
 	{
-		std::cout << "Entities added: " << added_ << "\n";
-		std::cout << "Entities deleted: " << remove_ << "\n";
+		std::cout << "Entities created: " << _added << "\n";
+		std::cout << "Entities deleted: " << _removed << "\n";
 	}
 
-	util::vector<game_entity::entity> entities_{ };
+	util::vector<game_entity::entity> _entities;
 
-	u32 added_{ 0 };
-	u32 remove_{ 0 };
-	u32 num_entries_{ 0 };
+	u32 _added{ 0 };
+	u32 _removed{ 0 };
+	u32 _num_entities{ 0 };
 };

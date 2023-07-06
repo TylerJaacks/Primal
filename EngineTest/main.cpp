@@ -1,32 +1,28 @@
-﻿#define TEST_ENTITY_COMPONENTS 1
+// Copyright (c) Arash Khatami
+// Distributed under the MIT license. See the LICENSE file in the project root for more information.
 
-#pragma comment(lib, "Engine.lib")
+#pragma comment(lib, "engine.lib")
+
+
+#define TEST_ENTITY_COMPONENTS 1
 
 #if TEST_ENTITY_COMPONENTS
-#include "TestEntityComponent.h"
+#include "TestEntityComponents.h"
 #else
-#error On of the tests needs to be enabled.
+#error One of the tests need to be enabled
 #endif
-
-#include "../Engine/Common/CommonHeaders.h"
-#include "../Engine/Components/Entity.h"
-#include "../Engine/Components/Transform.h"
-
-using namespace primal;
-using namespace primal::game_entity;
 
 int main()
 {
 #if _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
+    engine_test test{};
 
-	test_entity_component test{ };
+    if (test.initialize())
+    {
+        test.run();
+    }
 
-	if (test.initialize())
-	{
-		bool result = test.run();
-	}
-
-	return test.shutdown();
+    test.shutdown();
 }
