@@ -1,108 +1,112 @@
-﻿// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using System;
-using System.CodeDom;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 
-namespace PrimalEditor.Utilities
+namespace PrimalEditor.Utilities;
+
+public interface IUndoRedo
 {
-    public interface IUndoRedo
+    string Name { get; }
+
+    void Undo();
+    void Redo();
+}
+
+public class UndoRedoAction : IUndoRedo
+{
+    private readonly Action _undoAction;
+    private readonly Action _redoAction;
+
+    public string Name { get; }
+
+
+    public void Redo() => _redoAction();
+
+    public void Undo() => _undoAction();
+
+    private UndoRedoAction(string name)
     {
-        string Name { get; }
-        void Undo();
-        void Redo();
+        this.Name = name;
     }
 
-    public class UndoRedoAction : IUndoRedo
+    public UndoRedoAction(string name, Action undoAction, Action redoAction) : this(name)
     {
-        private Action _undoAction;
-        private Action _redoAction;
+        Debug.Assert(undoAction != null && redoAction != null);
 
-        public string Name { get; }
-
-        public void Redo() => _redoAction();
-
-        public void Undo() => _undoAction();
-
-        public UndoRedoAction(string name)
-        {
-            Name = name;
-        }
-
-        public UndoRedoAction(Action undo, Action redo, string name)
-            : this(name)
-        {
-            Debug.Assert(undo != null && redo != null);
-            _undoAction = undo;
-            _redoAction = redo;
-        }
-
-        public UndoRedoAction(string property, object instance, object undoValue, object redoValue, string name) :
-            this(
-                () => instance.GetType().GetProperty(property).SetValue(instance, undoValue),
-                () => instance.GetType().GetProperty(property).SetValue(instance, redoValue),
-                name)
-        { }
+        _undoAction = undoAction;
+        _redoAction = redoAction;
+    }
+    public UndoRedoAction(string property, object instance, object undoValue, object redoValue, string name) :
+        this(
+            name,
+            () => instance.GetType().GetProperty(property)?.SetValue(instance, undoValue),
+            () => instance.GetType().GetProperty(property)?.SetValue(instance, redoValue))
+    {
 
     }
+}
 
-    public class UndoRedo
+public class UndoRedo
+{
+    private bool _enableAdd = true;
+
+    private readonly ObservableCollection<IUndoRedo> _undoList = new();
+    private readonly ObservableCollection<IUndoRedo> _redoList = new();
+
+    public ReadOnlyObservableCollection<IUndoRedo> UndoList { get; }
+    public ReadOnlyObservableCollection<IUndoRedo> RedoList { get; }
+
+    public void Reset()
     {
-        private bool _enableAdd = true;
-        private readonly ObservableCollection<IUndoRedo> _redoList = new ObservableCollection<IUndoRedo>();
-        private readonly ObservableCollection<IUndoRedo> _undoList = new ObservableCollection<IUndoRedo>();
-        public ReadOnlyObservableCollection<IUndoRedo> RedoList { get; }
-        public ReadOnlyObservableCollection<IUndoRedo> UndoList { get; }
+        _undoList.Clear();
+        _redoList.Clear();
+    }
 
-        public void Reset()
+    public void Add(IUndoRedo cmd)
+    {
+        if (_enableAdd)
         {
+            _undoList.Add(cmd);
             _redoList.Clear();
-            _undoList.Clear();
         }
+    }
 
-        public void Add(IUndoRedo cmd)
+    public void Undo()
+    {
+        if (_undoList.Any())
         {
-            if (_enableAdd)
-            {
-                _undoList.Add(cmd);
-                _redoList.Clear();
-            }
-        }
+            var cmd = _undoList.Last();
 
-        public void Undo()
-        {
-            if (_undoList.Any())
-            {
-                var cmd = _undoList.Last();
-                _undoList.RemoveAt(_undoList.Count - 1);
-                _enableAdd = false;
-                cmd.Undo();
-                _enableAdd = true;
-                _redoList.Insert(0, cmd);
-            }
-        }
+            _undoList.RemoveAt(_undoList.Count - 1);
+            _enableAdd = false;
 
-        public void Redo()
-        {
-            if (_redoList.Any())
-            {
-                var cmd = _redoList.First();
-                _redoList.RemoveAt(0);
-                _enableAdd = false;
-                cmd.Redo();
-                _enableAdd = true;
-                _undoList.Add(cmd);
-            }
-        }
+            cmd.Undo();
 
-        public UndoRedo()
-        {
-            RedoList = new ReadOnlyObservableCollection<IUndoRedo>(_redoList);
-            UndoList = new ReadOnlyObservableCollection<IUndoRedo>(_undoList);
+            _enableAdd = true;
+            _redoList.Insert(0, cmd);
         }
+    }
+
+    public void Redo()
+    {
+        if (_redoList.Any())
+        {
+            var cmd = _redoList.First();
+
+            _redoList.RemoveAt(0);
+            _enableAdd = false;
+
+            cmd.Redo();
+
+            _enableAdd = true;
+            _undoList.Add(cmd);
+        }
+    }
+
+    public UndoRedo()
+    {
+        UndoList = new ReadOnlyObservableCollection<IUndoRedo>(_undoList);
+        RedoList = new ReadOnlyObservableCollection<IUndoRedo>(_redoList);
     }
 }

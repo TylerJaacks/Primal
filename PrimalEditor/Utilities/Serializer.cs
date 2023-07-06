@@ -1,47 +1,51 @@
-﻿// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
-using System.Text;
 
-namespace PrimalEditor.Utilities
+namespace PrimalEditor.Utilities;
+
+public static class Serializer
 {
-    public static class Serializer
+    public static void ToFile<T>(T instance, string path)
     {
-        public static void ToFile<T>(T instance, string path)
+        try
         {
-            try
-            {
-                using var fs = new FileStream(path, FileMode.Create);
-                var serializer = new DataContractSerializer(typeof(T));
-                serializer.WriteObject(fs, instance);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Logger.Log(MessageType.Error, $"Failed to serialize {instance} to {path}");
-                throw;
-            }
-        }
+            using var fs = new FileStream(path, FileMode.Create);
 
-        internal static T FromFile<T>(string path)
+            var serializer = new DataContractSerializer(typeof(T));
+
+            serializer.WriteObject(fs, instance);
+        }
+        catch (Exception e)
         {
-            try
-            {
-                using var fs = new FileStream(path, FileMode.Open);
-                var serializer = new DataContractSerializer(typeof(T));
-                T instance = (T)serializer.ReadObject(fs);
-                return instance;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Logger.Log(MessageType.Error, $"Failed to deserialize {path}");
-                throw;
-            }
+            Debug.WriteLine(e.Message);
+
+            Logger.Log(MessageType.Error, $"Failed to serialize {instance} to {path}");
+
+            throw;
+        }
+    }
+
+    internal static T FromFile<T>(string path)
+    {
+        try
+        {
+            using var fs = new FileStream(path, FileMode.Open);
+
+            var serializer = new DataContractSerializer(typeof(T));
+
+            T instance = (T)serializer.ReadObject(fs);
+
+            return instance;
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e.Message);
+
+            Logger.Log(MessageType.Error, $"Failed to deserialize file {path}");
+
+            throw;
         }
     }
 }

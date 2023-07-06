@@ -1,28 +1,26 @@
-﻿// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using System;
-using System.Collections.Generic;
+﻿using PrimalEditor.Common;
 using System.Diagnostics;
 using System.Runtime.Serialization;
-using System.Text;
 
-namespace PrimalEditor.Components
+namespace PrimalEditor.Components;
+
+internal interface IMSComponent { }
+
+[DataContract]
+public abstract class Component : ViewModelBase
 {
-    interface IMSComponent { }
+    [DataMember]
+    public GameEntity Owner { get; private set; }
 
-    [DataContract]
-    abstract class Component : ViewModelBase
+    protected Component(GameEntity owner)
     {
-        [DataMember]
-        public GameEntity Owner { get; private set; }
+        Debug.Assert(owner != null);
 
-        public Component(GameEntity owner)
-        {
-            Debug.Assert(owner != null);
-            Owner = owner;
-        }
+        Owner = owner;
     }
+}
 
-    abstract class MSComponent<T> : ViewModelBase, IMSComponent where T : Component 
-    { }
+internal abstract class MSComponent<T> : ViewModelBase, IMSComponent where T : MSComponent<T>
+{
+
 }

@@ -1,17 +1,14 @@
-﻿<!--
-    Copyright (c) Arash Khatami
-    Distributed under the MIT license. See the LICENSE file in the project root for more information.
--->
-<Window x:Class="PrimalEditor.MainWindow"
+﻿<Window x:Class="PrimalEditor.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PrimalEditor"
-        xmlns:editors="clr-namespace:PrimalEditor.Editors"
-        mc:Ignorable="d" WindowStartupLocation="CenterScreen"
+        xmlns:editor="clr-namespace:PrimalEditor.Editor"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="Primal Editor" Height="1080" Width="1920">
     <Grid>
-        <editors:WorldEditorView />
+        <editor:WorldEditorView/>
     </Grid>
 </Window>
