@@ -59,7 +59,9 @@ namespace PrimalEditor.GameProject
         private void AddGameEnity(GameEntity entity, int index = -1)
         {
             Debug.Assert(!_gameEntities.Contains(entity));
+            
             entity.IsActive = IsActive;
+            
             if (index == -1)
             {
                 _gameEntities.Add(entity);

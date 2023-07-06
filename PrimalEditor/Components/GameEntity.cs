@@ -16,8 +16,9 @@ namespace PrimalEditor.Components
     [DataContract]
     [KnownType(typeof(Transform))]
     class GameEntity : ViewModelBase
-    {
+    { 
         private int _entityId = ID.INVALID_ID;
+
         public int EntityId
         {
             get => _entityId;
@@ -32,6 +33,7 @@ namespace PrimalEditor.Components
         }
 
         private bool _isActive;
+
         public bool IsActive
         {
             get => _isActive;
@@ -40,13 +42,16 @@ namespace PrimalEditor.Components
                 if (_isActive != value)
                 {
                     _isActive = value;
+
                     if(_isActive)
                     {
+                        EntityId = EngineAPI.CreateGameEntity(this);
+
                         Debug.Assert(ID.IsValid(_entityId));
                     }
                     else
                     {
-                        
+                        EngineAPI.RemoveGameEntity(this);
                     }
 
                     OnPropertyChanged(nameof(IsActive));
@@ -56,6 +61,7 @@ namespace PrimalEditor.Components
 
 
         private bool _isEnabled = true;
+
         [DataMember]
         public bool IsEnabled
         {
@@ -71,6 +77,7 @@ namespace PrimalEditor.Components
         }
 
         private string _name;
+
         [DataMember]
         public string Name
         {
@@ -90,9 +97,11 @@ namespace PrimalEditor.Components
 
         [DataMember(Name = nameof(Components))]
         private readonly ObservableCollection<Component> _components = new ObservableCollection<Component>();
+
         public ReadOnlyObservableCollection<Component> Components { get; private set; }
 
         public Component GetComponent(Type type) => Components.FirstOrDefault(c => c.GetType() == type);
+
         public T GetComponent<T>() where T : Component => GetComponent(typeof(T)) as T;
 
         [OnDeserialized]
