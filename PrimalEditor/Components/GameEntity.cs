@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Arash Khatami
 // Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using PrimalEditor.DllWrappers;
 using PrimalEditor.GameProject;
 using PrimalEditor.Utilities;
 using System;
@@ -43,12 +42,11 @@ namespace PrimalEditor.Components
                     _isActive = value;
                     if(_isActive)
                     {
-                        EntityId = EngineAPI.CreateGameEntity(this);
                         Debug.Assert(ID.IsValid(_entityId));
                     }
                     else
                     {
-                        EngineAPI.RemoveGameEntity(this);
+                        
                     }
 
                     OnPropertyChanged(nameof(IsActive));
