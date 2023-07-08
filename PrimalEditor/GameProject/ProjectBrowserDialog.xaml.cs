@@ -1,52 +1,49 @@
-﻿// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using System.Windows.Media.Animation;
+
 
 namespace PrimalEditor.GameProject
 {
-    /// <summary>
-    /// Interaction logic for ProjectBrowserDialg.xaml
-    /// </summary>
     public partial class ProjectBrowserDialog : Window
     {
+        private readonly CubicEase _easing = new() { EasingMode = EasingMode.EaseInOut };
+
         public ProjectBrowserDialog()
         {
             InitializeComponent();
+
             Loaded += OnProjectBrowserDialogLoaded;
         }
 
         private void OnProjectBrowserDialogLoaded(object sender, RoutedEventArgs e)
         {
             Loaded -= OnProjectBrowserDialogLoaded;
-            if(!OpenProject.Projects.Any())
-            {
-                openProjectButton.IsEnabled = false;
-                openProjectView.Visibility = Visibility.Hidden;
-                OnToggleButton_Click(createProjectButton, new RoutedEventArgs());
-            }
+
+            if (OpenProject.Projects.Any()) return;
+
+            openProjectButton.IsEnabled = false;
+            openProjectView.Visibility = Visibility.Hidden;
+
+            OnToggleButtonClick(createProjectButton, new RoutedEventArgs());
         }
 
-        private void OnToggleButton_Click(object sender, RoutedEventArgs e)
+        private void OnToggleButtonClick(object sender, RoutedEventArgs e)
         {
-            if(sender == openProjectButton)
+            if (Equals(sender, openProjectButton))
             {
-                if(createProjectButton.IsChecked == true)
+                if (createProjectButton.IsChecked == true)
                 {
                     createProjectButton.IsChecked = false;
-                    browserContent.Margin = new Thickness(0);
 
+                    AnimateToOpenProject();
+
+                    openProjectView.IsEnabled = true;
+                    newProjectView.IsEnabled = false;
                 }
+
                 openProjectButton.IsChecked = true;
             }
             else
@@ -54,11 +51,49 @@ namespace PrimalEditor.GameProject
                 if (openProjectButton.IsChecked == true)
                 {
                     openProjectButton.IsChecked = false;
-                    browserContent.Margin = new Thickness(-800,0,0,0);
 
+                    AnimateToCreateProject();
+
+                    openProjectView.IsEnabled = false;
+                    newProjectView.IsEnabled = true;
                 }
+
                 createProjectButton.IsChecked = true;
             }
+        }
+
+        private void AnimateToCreateProject()
+        {
+            var highlightAnimation = new DoubleAnimation(200, 400, new Duration(TimeSpan.FromSeconds(0.2)));
+
+            highlightAnimation.Completed += (s, e) =>
+            {
+                var animation = new ThicknessAnimation(new Thickness(0, 0, 0, 0), new Thickness(-1600, 0, 0, 0),
+                    new Duration(TimeSpan.FromSeconds(0.5)));
+
+                animation.EasingFunction = _easing;
+
+                browserContent.BeginAnimation(MarginProperty, animation);
+            };
+
+            HighlightRect.BeginAnimation(Canvas.LeftProperty, highlightAnimation);
+        }
+
+        private void AnimateToOpenProject()
+        {
+            var highlightAnimation = new DoubleAnimation(400, 200, new Duration(TimeSpan.FromSeconds(0.2)));
+
+            highlightAnimation.Completed += (s, e) =>
+            {
+                var animation = new ThicknessAnimation(new Thickness(-1600, 0, 0, 0), new Thickness(0),
+                    new Duration(TimeSpan.FromSeconds(0.5)));
+
+                animation.EasingFunction = _easing;
+
+                browserContent.BeginAnimation(MarginProperty, animation);
+            };
+
+            HighlightRect.BeginAnimation(Canvas.LeftProperty, highlightAnimation);
         }
     }
 }
