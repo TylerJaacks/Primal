@@ -129,5 +129,10 @@ namespace PrimalEditor.GameProject
 
             OnDeserialized(new StreamingContext());
         }
+
+        public Project()
+        {
+
+        }
     }
 }

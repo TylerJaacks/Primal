@@ -1,14 +1,11 @@
-﻿<!--
-    Copyright (c) Arash Khatami
-    Distributed under the MIT license. See the LICENSE file in the project root for more information.
--->
-<UserControl x:Class="PrimalEditor.Editors.WorldEditorView"
+﻿<UserControl x:Class="PrimalEditor.Editors.WorldEditorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PrimalEditor.Editors"
              xmlns:utl="clr-namespace:PrimalEditor.Utilities"
+             xmlns:ctrl="clr-namespace:PrimalEditor.Utilities.Controls"
              mc:Ignorable="d" Focusable="True"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.InputBindings>
@@ -35,9 +32,22 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch"
-                          VerticalAlignment="Top"/>
-                <TabControl Grid.Row="1">
+                <Border Background="{StaticResource Editor.Selected.BackgroundBrush}">
+                    <StackPanel VerticalAlignment="Center">
+                        <ctrl:NumberBox Value="0" Foreground="{StaticResource Editor.FontBrush}"/>
+                        <ctrl:ScalerBox Value="10" Multiplier="10"/>
+
+                        <ctrl:VectorBox X="0" Y="1" Z="2" W="3" VectorType="Vector2"/>
+                        <ctrl:VectorBox X="0" Y="1" Z="2" W="3" VectorType="Vector3"/>
+                        <ctrl:VectorBox X="0" Y="1" Z="2" W="3" VectorType="Vector4"/>
+
+                        <ctrl:VectorBox X="0" Y="1" Z="2" W="3" VectorType="Vector2" Orientation="Vertical"/>
+                        <ctrl:VectorBox X="0" Y="1" Z="2" W="3" VectorType="Vector3" Orientation="Vertical"/>
+                        <ctrl:VectorBox X="0" Y="1" Z="2" W="3" VectorType="Vector4" Orientation="Vertical"/>
+                    </StackPanel>
+                </Border>
+                <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Top" Background="Transparent"/>
+                <TabControl Grid.Row="1" Background="{StaticResource Editor.Window.GrayBrush2}" Margin="0,5,0,0">
                     <TabItem Header="History">
                         <utl:UndoRedoView DataContext="{Binding UndoRedo}"/>
                     </TabItem>
@@ -46,19 +56,20 @@
                     </TabItem>
                 </TabControl>
             </Grid>
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Left"
-                      VerticalAlignment="Stretch"/>
+            
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="Transparent"/>
+            
             <Grid Grid.Column="1" Margin="5,0,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch"
-                          VerticalAlignment="Top"/>
-                <local:ProjectLayoutView />
-                <local:GameEntityView Grid.Row="1"/>
-            </Grid>
+                
+                <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Top" Background="Transparent"/>
 
+                <local:ProjectLayoutView Grid.Row="0" Background="{StaticResource Editor.Window.GrayBrush3}"/>
+                <local:GameEntityView Grid.Row="1" Background="{StaticResource Editor.Window.GrayBrush3}" Margin="0,5,0,0"/>
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>
