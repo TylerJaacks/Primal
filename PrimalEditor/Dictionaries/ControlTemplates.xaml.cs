@@ -75,7 +75,6 @@ namespace PrimalEditor.Dictionaries
             {
                 exp.UpdateTarget();
 
-                textBox.MoveFocus(new TraversalRequest(FocusNavigationDirection.Previous));
                 textBox.Visibility = Visibility.Collapsed;
             }
         }

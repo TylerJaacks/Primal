@@ -45,10 +45,10 @@ namespace PrimalEditor.Editors
                 "Selection changed"
                 ));
 
-            MSGameEntity msEntity = null;
+            MsGameEntity msEntity = null;
             if(newSelection.Any())
             {
-                msEntity = new MSGameEntity(newSelection);
+                msEntity = new MsGameEntity(newSelection);
             }
             GameEntityView.Instance.DataContext = msEntity;
         }

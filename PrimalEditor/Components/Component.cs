@@ -1,28 +1,56 @@
-﻿// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace PrimalEditor.Components
 {
-    interface IMSComponent { }
+    internal interface IMsComponent { }
 
     [DataContract]
-    abstract class Component : ViewModelBase
+    internal abstract class Component : ViewModelBase
     {
+        public abstract IMsComponent GetMultliselectionComponent(MsEntity msEntity);
+
         [DataMember]
         public GameEntity Owner { get; private set; }
 
-        public Component(GameEntity owner)
+        protected Component(GameEntity owner)
         {
             Debug.Assert(owner != null);
+
             Owner = owner;
         }
     }
 
-    abstract class MSComponent<T> : ViewModelBase, IMSComponent where T : Component 
-    { }
+    internal abstract class MsComponent<T> : ViewModelBase, IMsComponent where T : Component
+    {
+        public List<T> SelectedComponents { get; }
+
+        private bool _enableUpdates = true;
+
+        protected abstract bool UpdateComponents(string propertyName);
+        protected abstract bool UpdateMsComponent();
+
+        public void Refresh()
+        {
+            _enableUpdates = false;
+
+            UpdateMsComponent();
+
+            _enableUpdates = true;
+        }
+
+        protected MsComponent(MsEntity msEntity)
+        {
+            Debug.Assert(msEntity?.SelectedEntities?.Any() == true);
+
+            SelectedComponents = msEntity.SelectedEntities.Select(entity => entity.GetComponent<T>()).ToList();
+
+            PropertyChanged += (s, e) =>
+            {
+                if (_enableUpdates) UpdateComponents(e.PropertyName);
+            };
+        }
+    }
 }

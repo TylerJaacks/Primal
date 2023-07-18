@@ -331,7 +331,7 @@
                                         <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
                                     </Style>
                                 </DockPanel.Resources>
-                                
+
                                 <TextBlock 
                                     Margin="5,2,0,0" 
                                     VerticalAlignment="Center" 
