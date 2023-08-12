@@ -1,88 +1,109 @@
-// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
 #include "Entity.h"
 #include "Transform.h"
+#include "Script.h"
 
 namespace primal::game_entity {
+	namespace
+	{
+		utl::vector<transform::component>       transforms;
+		utl::vector<script::component>          scripts;
 
-namespace {
+		utl::vector<id::generation_type>        generations;
+		utl::deque<entity_id>                   free_ids;
+	}
 
-utl::vector<transform::component>       transforms;
+	entity create(const entity_info info)
+	{
+		assert(info.transform);
 
-utl::vector<id::generation_type>        generations;
-utl::deque<entity_id>                   free_ids;
+		if (!info.transform) return entity{};
 
-} // anonymous namespace
+		entity_id id;
 
-entity
-create_game_entity(const entity_info& info)
-{
-    assert(info.transform); // All game entities must have a transform component
-    if (!info.transform) return entity{};
+		if (free_ids.size() > id::min_deleted_elements)
+		{
+			id = free_ids.front();
 
-    entity_id id;
+			assert(!is_alive(id));
 
-    if(free_ids.size() > id::min_deleted_elements)
-    { 
-        id = free_ids.front();
-        assert(!is_alive(entity{ id }));
-        free_ids.pop_front();
-        id = entity_id{ id::new_generation(id) };
-        ++generations[id::index(id)];
-    }
-    else
-    {
-        id = entity_id{ (id::id_type)generations.size() };
-        generations.push_back(0);
+			free_ids.pop_front();
 
-        // Resize components
-        // NOTE: we don't call resize(), so the number of memory allocations stays low
-        transforms.emplace_back();
-    }
+			id = entity_id{ id::new_generation(id) };
 
-    const entity new_entity{ id };
-    const id::id_type index{ id::index(id) };
+			++generations[id::index(id)];
+		}
+		else
+		{
+			id = entity_id { static_cast<id::id_type>(generations.size()) };
 
-    // Create transform component
-    assert(!transforms[index].is_valid());
-    transforms[index] = transform::create_transform(*info.transform, new_entity);
-    if (!transforms[index].is_valid()) return {};
+			generations.push_back(0);
 
-    return new_entity;
-}
+			// Resize components
+			// NOTE: we don't call resize(), so the number of memory allocations stays low
+			transforms.emplace_back();
+		}
 
-void 
-remove_game_entity(entity e) 
-{
-    const entity_id id{ e.get_id() };
-    const id::id_type index{ id::index(id) };
-    assert(is_alive(e));
-    if (is_alive(e))
-    {
-        transform::remove_transform(transforms[index]);
-        transforms[index] = {};
-        free_ids.push_back(id);
-    }
-}
+		const entity new_entity{ id };
+		const id::id_type index{ id::index(id) };
 
-bool 
-is_alive(entity e) 
-{
-    assert(e.is_valid());
-    const entity_id id{ e.get_id() };
-    const id::id_type index{ id::index(id) };
-    assert(index < generations.size());
-    assert(generations[index] == id::generation(id));
-    return (generations[index] == id::generation(id) && transforms[index].is_valid());
-}
+		// Create transform component
+		assert(!transforms[index].is_valid());
+		transforms[index] = transform::create(*info.transform, new_entity);
+		if (!transforms[index].is_valid()) return {};
 
-transform::component 
-entity::transform() const
-{
-    assert(is_alive(*this));
-    const id::id_type index{ id::index(_id) };
-    return transforms[index];
-}
+		// Create script component
+		if (info.script && info.script->script_creator)
+		{
+			assert(!scripts[index].is_valid());
+			scripts[index] = script::create(*info.script, new_entity);
+			assert(scripts[index].is_valid());
+		}
 
+		return new_entity;
+	}
 
+	void
+		remove(const entity_id id)
+	{
+		const id::id_type index{ id::index(id) };
+
+		assert(is_alive(id));
+
+		transform::remove(transforms[index]);
+
+		transforms[index] = {};
+
+		free_ids.push_back(id);
+	}
+
+	bool
+		is_alive(const entity_id id)
+	{
+		assert(id::is_valid(id));
+
+		const id::id_type index{ id::index(id) };
+
+		assert(index < generations.size());
+		assert(generations[index] == id::generation(id));
+
+		return (generations[index] == id::generation(id) && transforms[index].is_valid());
+	}
+
+	transform::component entity::transform() const
+	{
+		assert(is_alive(id_));
+
+		const id::id_type index{ id::index(id_) };
+
+		return transforms[index];
+	}
+
+	script::component entity::script() const
+	{
+		assert(is_alive(id_));
+
+		const id::id_type index{ id::index(id_) };
+
+		return scripts[index];
+	}
 }

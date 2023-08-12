@@ -1,13 +1,13 @@
-#ifndef EDITIOR_INTERFACE
-#define EDITIOR_INTERFACE extern "C" __declspec(dllexport)
-#endif //!EDITIOR_INTERFACE
+#ifndef EDITOR_INTERFACE
+#define EDITOR_INTERFACE extern "C" __declspec(dllexport)
+#endif //!EDITOR_INTERFACE
 
 #include "CommonHeaders.h"
 
 #include "Id.h"
 
-#include "..\Engine\Components\Entity.h"
-#include "..\Engine\Components\Transform.h"
+#include "../Engine/Components/Entity.h"
+#include "../Engine/Components/Transform.h"
 
 using namespace primal;
 
@@ -28,10 +28,11 @@ namespace
 			memcpy(&info.position[0], &position[0], sizeof(f32) * _countof(position));
 			memcpy(&info.scale[0], &scale[0], sizeof(f32) * _countof(scale));
 
-			XMFLOAT3A rot { &rotation[0] };
-			XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3A(&rot));
+			const XMFLOAT3A rot { &rotation[0] };
+			const XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3A(&rot));
 
 			XMFLOAT4A rot_quat { };
+
 			XMStoreFloat4A(&rot_quat, quat);
 
 			memcpy(&info.rotation[0], &rot_quat.x, sizeof(f32) * _countof(info.rotation));
@@ -51,25 +52,25 @@ namespace
 	}
 }
 
-EDITIOR_INTERFACE id::id_type CreateGameEntity(game_entity_descriptor* descriptor)
+EDITOR_INTERFACE id::id_type CreateGameEntity(game_entity_descriptor* descriptor)
 {
 	assert(descriptor);
 
-	game_entity_descriptor& desc{ *descriptor };
+	auto& [transform]{ *descriptor };
 
-	transform::init_info transform_info { desc.transform.to_init_info() };
+	transform::init_info transform_info { transform.to_init_info() };
 
-	game_entity::entity_info entity_info
+	const game_entity::entity_info entity_info
 	{
 		&transform_info,
 	};
 
-	return game_entity::create_game_entity(entity_info).get_id();
+	return game_entity::create(entity_info).get_id();
 }
 
-EDITIOR_INTERFACE void RemoveGameEntity(id::id_type id)
+EDITOR_INTERFACE void RemoveGameEntity(const id::id_type id)
 {
 	assert(id::is_valid(id));
 
-	game_entity::remove_game_entity(entity_from_id(id));
+	game_entity::remove(entity_from_id(id).get_id());
 }

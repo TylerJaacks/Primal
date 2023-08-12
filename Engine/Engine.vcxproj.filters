@@ -1,19 +1,72 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Common\CommonHeaders.h" />
-    <ClInclude Include="Common\PrimitiveTypes.h" />
-    <ClInclude Include="Common\Id.h" />
-    <ClInclude Include="Components\Entity.h" />
-    <ClInclude Include="Components\ComponentsCommon.h" />
-    <ClInclude Include="Components\Transform.h" />
-    <ClInclude Include="Utilities\Utilities.h" />
-    <ClInclude Include="EngineAPI\GameEntity.h" />
-    <ClInclude Include="EngineAPI\TransfromComponent.h" />
-    <ClInclude Include="Utilities\MathTypes.h" />
+    <ClInclude Include="Components\ComponentsCommon.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Entity.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\CommonHeaders.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\PrimitiveTypes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\MathTypes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineAPI\TransfromComponent.h">
+      <Filter>EngineAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineAPI\GameEntity.h">
+      <Filter>EngineAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Transform.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Utilities\Utilities.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Id.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Components\Script.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineAPI\ScriptComponent.h">
+      <Filter>EngineAPI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Components\Entity.cpp" />
-    <ClCompile Include="Components\Transform.cpp" />
+    <ClCompile Include="Components\Entity.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\Transform.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Components\Script.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\main.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Common">
+      <UniqueIdentifier>{48abe024-cac6-4bfa-a952-a8179103fcc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components">
+      <UniqueIdentifier>{fe481cd7-1e83-4987-92f2-3477f22487e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EngineAPI">
+      <UniqueIdentifier>{36c00f14-b836-478d-ab5e-922a68cf23b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{0e129055-49a6-431a-ad20-8f9d07bf12f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{be7ce412-53c4-496c-a15c-bec77b2da006}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
