@@ -80,15 +80,15 @@ namespace primal::script {
 
 		assert(id::is_valid(id));
 
+		const id::id_type index { static_cast<id::id_type>(entity_scripts.size()) };
+
 		entity_scripts.emplace_back(info.script_creator(entity));
 
 		assert(entity_scripts.back()->get_id() == entity.get_id());
 
-		const id::id_type index{ static_cast<id::id_type>(entity_scripts.size()) };
-
 		id_mapping[id::index(id)] = index;
 
-		return component{ id };
+		return component { id };
 	}
 
 	void remove(const component c)

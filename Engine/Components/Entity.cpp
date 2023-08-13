@@ -41,6 +41,7 @@ namespace primal::game_entity {
 			// Resize components
 			// NOTE: we don't call resize(), so the number of memory allocations stays low
 			transforms.emplace_back();
+			scripts.emplace_back();
 		}
 
 		const entity new_entity{ id };
@@ -48,26 +49,36 @@ namespace primal::game_entity {
 
 		// Create transform component
 		assert(!transforms[index].is_valid());
+
 		transforms[index] = transform::create(*info.transform, new_entity);
+
 		if (!transforms[index].is_valid()) return {};
 
 		// Create script component
 		if (info.script && info.script->script_creator)
 		{
 			assert(!scripts[index].is_valid());
+
 			scripts[index] = script::create(*info.script, new_entity);
+
 			assert(scripts[index].is_valid());
 		}
 
 		return new_entity;
 	}
 
-	void
-		remove(const entity_id id)
+	void remove(const entity_id id)
 	{
 		const id::id_type index{ id::index(id) };
 
 		assert(is_alive(id));
+
+		if (scripts[index].is_valid())
+		{
+			script::remove(scripts[index]);
+
+			scripts[index] = {};
+		}
 
 		transform::remove(transforms[index]);
 
@@ -76,8 +87,7 @@ namespace primal::game_entity {
 		free_ids.push_back(id);
 	}
 
-	bool
-		is_alive(const entity_id id)
+	bool is_alive(const entity_id id)
 	{
 		assert(id::is_valid(id));
 
