@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
+using PrimalEditor.GameDev;
 
 namespace PrimalEditor.Editors
 {
@@ -19,6 +20,11 @@ namespace PrimalEditor.Editors
             Loaded -= OnWorldEditorViewLoaded;
             
             Focus();
+        }
+
+        private void NewScriptsButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            new NewScriptDialog().Show();
         }
     }
 }

@@ -1,21 +1,17 @@
-﻿// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using PrimalEditor.Utilities;
-using System;
-using System.Collections.Generic;
+﻿using PrimalEditor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Windows;
 using System.Windows.Input;
+using PrimalEditor.GameDev;
 
 namespace PrimalEditor.GameProject
 {
     [DataContract(Name = "Game")]
-    class Project : ViewModelBase
+    internal class Project : ViewModelBase
     {
         public static string Extension { get; } = ".primal";
         [DataMember]
@@ -23,10 +19,12 @@ namespace PrimalEditor.GameProject
         [DataMember]
         public string Path { get; private set; }
 
-        public string FullPath => $@"{Path}{Name}\{Name}{Extension}";
+        public string FullPath => $@"{Path}{Name}{Extension}";
+
+        public string Solution => $@"{Path}{Name}.sln";
 
         [DataMember(Name = "Scenes")]
-        private ObservableCollection<Scene> _scenes = new ObservableCollection<Scene>();
+        private ObservableCollection<Scene> _scenes = new();
         public ReadOnlyObservableCollection<Scene> Scenes
         { get; private set; }
 
@@ -36,15 +34,15 @@ namespace PrimalEditor.GameProject
             get => _activeScene;
             set
             {
-                if (_activeScene != value)
-                {
-                    _activeScene = value;
-                    OnPropertyChanged(nameof(ActiveScene));
-                }
+                if (_activeScene == value) return;
+
+                _activeScene = value;
+
+                OnPropertyChanged(nameof(ActiveScene));
             }
         }
 
-        public static Project Current => Application.Current.MainWindow.DataContext as Project;
+        public static Project Current => Application.Current.MainWindow?.DataContext as Project;
 
         public static UndoRedo UndoRedo { get; } = new UndoRedo();
 
@@ -75,6 +73,8 @@ namespace PrimalEditor.GameProject
 
         public void Unload()
         {
+            VisualStudio.CloseVisualStudio();
+
             UndoRedo.Reset();
         }
 

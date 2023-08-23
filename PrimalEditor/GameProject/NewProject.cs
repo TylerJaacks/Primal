@@ -160,7 +160,7 @@ namespace PrimalEditor.GameProject
 
                 var projectXml = File.ReadAllText(template.ProjectFilePath);
 
-                projectXml = string.Format(projectXml, ProjectName, ProjectPath);
+                projectXml = string.Format(projectXml, ProjectName, path);
 
                 var projectPath = Path.GetFullPath(Path.Combine(path, $"{ProjectName}{Project.Extension}"));
 
@@ -185,24 +185,19 @@ namespace PrimalEditor.GameProject
             Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "MSVCSolution")));
             Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "MSVCProject")));
 
-            var engineApiPath = Path.Combine(MainWindow.PrimalPath, @"Engine\EngineAPI\");
-
-            Debug.Assert(Directory.Exists(engineApiPath));
+            var engineAPIPath = Path.Combine(MainWindow.PrimalPath, @"Engine\EngineAPI\");
+            Debug.Assert(Directory.Exists(engineAPIPath));
 
             var _0 = ProjectName;
             var _1 = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
+            var _2 = engineAPIPath;
             var _3 = MainWindow.PrimalPath;
 
             var solution = File.ReadAllText(Path.Combine(template.TemplatePath, "MSVCSolution"));
-
             solution = string.Format(solution, _0, _1, "{" + Guid.NewGuid().ToString().ToUpper() + "}");
-
             File.WriteAllText(Path.GetFullPath(Path.Combine(projectPath, $"{_0}.sln")), solution);
-
             var project = File.ReadAllText(Path.Combine(template.TemplatePath, "MSVCProject"));
-
-            project = string.Format(project, _0, _1, engineApiPath, _3);
-
+            project = string.Format(project, _0, _1, _2, _3);
             File.WriteAllText(Path.GetFullPath(Path.Combine(projectPath, $@"GameCode\{_0}.vcxproj")), project);
         }
 
