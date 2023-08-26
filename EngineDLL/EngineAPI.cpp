@@ -1,76 +1,41 @@
-#ifndef EDITOR_INTERFACE
-#define EDITOR_INTERFACE extern "C" __declspec(dllexport)
-#endif //!EDITOR_INTERFACE
-
+#include "Common.h"
 #include "CommonHeaders.h"
 
-#include "Id.h"
+#ifndef WIN32_MEAN_AND_LEAN
+#define WIN32_MEAN_AND_LEAN
+#endif
 
-#include "../Engine/Components/Entity.h"
-#include "../Engine/Components/Transform.h"
+#include <Windows.h>
 
 using namespace primal;
 
-namespace 
+namespace
 {
-	struct transform_component 
-	{
-		f32 position[3];
-		f32 rotation[3];
-		f32 scale[3];
-
-		transform::init_info to_init_info()
-		{
-			using namespace DirectX;
-
-			transform::init_info info {};
-
-			memcpy(&info.position[0], &position[0], sizeof(f32) * _countof(position));
-			memcpy(&info.scale[0], &scale[0], sizeof(f32) * _countof(scale));
-
-			const XMFLOAT3A rot { &rotation[0] };
-			const XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3A(&rot));
-
-			XMFLOAT4A rot_quat { };
-
-			XMStoreFloat4A(&rot_quat, quat);
-
-			memcpy(&info.rotation[0], &rot_quat.x, sizeof(f32) * _countof(info.rotation));
-
-			return info;
-		}
-	};
-
-	struct game_entity_descriptor
-	{
-		transform_component transform;
-	};
-
-	game_entity::entity entity_from_id(id::id_type id) 
-	{
-		return game_entity::entity { game_entity::entity_id { id } };
-	}
+	HMODULE game_code_dll { nullptr };
 }
 
-EDITOR_INTERFACE id::id_type CreateGameEntity(game_entity_descriptor* descriptor)
+EDITOR_INTERFACE u32 LoadGameCodeDll(const char* dll_path)
 {
-	assert(descriptor);
+	if (game_code_dll) return 0;
 
-	auto& [transform]{ *descriptor };
+	game_code_dll = LoadLibraryA(dll_path);
 
-	transform::init_info transform_info { transform.to_init_info() };
+	assert(game_code_dll);
 
-	const game_entity::entity_info entity_info
-	{
-		&transform_info,
-	};
-
-	return game_entity::create(entity_info).get_id();
+	return game_code_dll ? TRUE : FALSE;
 }
 
-EDITOR_INTERFACE void RemoveGameEntity(const id::id_type id)
+EDITOR_INTERFACE u32 UnloadGameCodeDll()
 {
-	assert(id::is_valid(id));
+	if (!game_code_dll) return FALSE;
 
-	game_entity::remove(entity_from_id(id).get_id());
+	assert(game_code_dll);
+
+	const int result = FreeLibrary(game_code_dll);
+
+	assert(result);
+
+	game_code_dll = nullptr;
+
+	return TRUE;
 }

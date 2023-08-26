@@ -1,20 +1,15 @@
-﻿// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using PrimalEditor.Components;
+﻿using PrimalEditor.Components;
 using PrimalEditor.Utilities;
-using System;
-using System.CodeDom;
-using System.Collections.Generic;
+
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Windows.Input;
 
 namespace PrimalEditor.GameProject
 {
     [DataContract]
-    class Scene : ViewModelBase
+    public class Scene : ViewModelBase
     {
         private string _name;
         [DataMember]

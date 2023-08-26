@@ -12,7 +12,7 @@ namespace PrimalEditor.Components
 {
     [DataContract]
     [KnownType(typeof(Transform))]
-    internal class GameEntity : ViewModelBase
+    public class GameEntity : ViewModelBase
     { 
         private int _entityId = ID.INVALID_ID;
 
@@ -42,13 +42,13 @@ namespace PrimalEditor.Components
 
                     if (_isActive)
                     {
-                        EntityId = EngineAPI.CreateGameEntity(this);
+                        EntityId = EngineAPI.EntityAPI.CreateGameEntity(this);
 
                         Debug.Assert(ID.IsValid(_entityId));
                     }
                     else if (ID.IsValid(EntityId))
                     {
-                        EngineAPI.RemoveGameEntity(this);
+                        EngineAPI.EntityAPI.RemoveGameEntity(this);
 
                         EntityId = ID.INVALID_ID;
                     }
@@ -122,7 +122,7 @@ namespace PrimalEditor.Components
         }
     }
 
-    internal abstract class MsEntity : ViewModelBase
+    public abstract class MsEntity : ViewModelBase
     {
         // Enables updates to selected entities
         private bool _enableUpdates = true;

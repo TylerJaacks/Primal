@@ -5,10 +5,10 @@ using System.Runtime.Serialization;
 
 namespace PrimalEditor.Components
 {
-    internal interface IMsComponent { }
+    public interface IMsComponent { }
 
     [DataContract]
-    internal abstract class Component : ViewModelBase
+    public abstract class Component : ViewModelBase
     {
         public abstract IMsComponent GetMultliselectionComponent(MsEntity msEntity);
 

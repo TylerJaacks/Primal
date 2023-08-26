@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+
 using PrimalEditor.Components;
 using PrimalEditor.GameProject;
 using PrimalEditor.Utilities;
@@ -58,7 +59,7 @@ namespace PrimalEditor.Editors
             };
         }
 
-        private void RecordAction(Action redoAction, string name)
+        private void RecordActions(Action redoAction, string name)
         {
             Debug.Assert(_undoAction != null);
 
@@ -82,7 +83,7 @@ namespace PrimalEditor.Editors
         {
             if (!_propertyChanged) return;
 
-            RecordAction(GetPositionAction(), "Position Changed.");
+            RecordActions(GetPositionAction(), "Position Changed.");
         }
 
         private void PositionVectorBox_OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -104,7 +105,7 @@ namespace PrimalEditor.Editors
         {
             if (!_propertyChanged) return;
 
-            RecordAction(GetRotationAction(), "Rotation Changed.");
+            RecordActions(GetRotationAction(), "Rotation Changed.");
         }
 
         private void RotationVectorBox_OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -126,7 +127,7 @@ namespace PrimalEditor.Editors
         {
             if (!_propertyChanged) return;
 
-            RecordAction(GetScaleAction(), "Scale Changed.");
+            RecordActions(GetScaleAction(), "Scale Changed.");
         }
 
         private void ScaleVectorBox_OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)

@@ -1,16 +1,15 @@
 ﻿using System;
-using PrimalEditor.GameProject;
-
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
 
+using PrimalEditor.GameProject;
 
 namespace PrimalEditor
 {
     public partial class MainWindow : Window
     {
-        public static string PrimalPath { get; private set; } = @"D:\Documents\Visual Studio 2022\Projects\Primal\";
+        public static string PrimalPath { get; private set; }
 
         public MainWindow()
         {
@@ -65,7 +64,7 @@ namespace PrimalEditor
         {
             var projectBrowser = new ProjectBrowserDialog();
 
-            if(projectBrowser.ShowDialog() == false || projectBrowser.DataContext == null)
+            if (projectBrowser.ShowDialog() == false || projectBrowser.DataContext == null)
                 Application.Current.Shutdown();
             else
             {

@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using EnvDTE;
+using Project = PrimalEditor.GameProject.Project;
 
 namespace PrimalEditor.GameDev;
 
@@ -12,6 +14,9 @@ public static class VisualStudio
 {
     private static EnvDTE80.DTE2 _vsInstance = null;
     private const string ProgramId = "VisualStudio.DTE.17.0";
+
+    public static bool BuildSucceeded { get; private set; } = true;
+    public static bool BuildFinished { get; private set; } = true;
 
     [DllImport("ole32.dll")]
     private static extern int GetRunningObjectTable(uint reserved, out IRunningObjectTable pObjectTable);
@@ -27,52 +32,53 @@ public static class VisualStudio
 
         try
         {
-            if (_vsInstance == null)
+            if (_vsInstance != null) return;
+
+            var hResult = GetRunningObjectTable(0, out runningObjectTable);
+
+            if (hResult < 0 || runningObjectTable == null) throw new COMException($"GetRunningObjectTable() returned HRESULT: {hResult:X8}");
+
+            runningObjectTable.EnumRunning(out monikerTable);
+            monikerTable.Reset();
+
+            hResult = CreateBindCtx(0, out bindCtx);
+
+            if (hResult < 0 || bindCtx == null) throw new COMException($"CreateBindCtx() returned HRESULT: {hResult:X8}");
+
+            var currentMoniker = new IMoniker[1];
+
+            while (monikerTable.Next(1, currentMoniker, IntPtr.Zero) == 0)
             {
-                // Finde and open visual
-                var hResult = GetRunningObjectTable(0, out runningObjectTable);
+                var name = string.Empty;
 
-                if (hResult < 0 || runningObjectTable == null) throw new COMException($"GetRunningObjectTable() returned HRESULT: {hResult:X8}");
+                currentMoniker[0]?.GetDisplayName(bindCtx, null, out name);
 
-                runningObjectTable.EnumRunning(out monikerTable);
-                monikerTable.Reset();
+                if (!name.Contains(ProgramId)) continue;
 
-                hResult = CreateBindCtx(0, out bindCtx);
+                hResult = runningObjectTable.GetObject(currentMoniker[0], out var obj);
+                        
+                if (hResult < 0 || obj == null) throw new COMException($"Running object table's GetObject() returned HRESULT: {hResult:X8}");
 
-                if (hResult < 0 || bindCtx == null) throw new COMException($"CreateBindCtx() returned HRESULT: {hResult:X8}");
+                var dte = obj as EnvDTE80.DTE2;
 
-                IMoniker[] currentMoniker = new IMoniker[1];
-
-                while (monikerTable.Next(1, currentMoniker, IntPtr.Zero) == 0)
+                if (dte != null)
                 {
-                    string name = string.Empty;
+                    var solutionName = dte.Solution.FullName;
 
-                    currentMoniker[0]?.GetDisplayName(bindCtx, null, out name);
-
-                    if (name.Contains(ProgramId))
-                    {
-                        hResult = runningObjectTable.GetObject(currentMoniker[0], out object obj);
-                        
-                        if (hResult < 0 || obj == null) throw new COMException($"Running object table's GetObject() returned HRESULT: {hResult:X8}");
-
-                        EnvDTE80.DTE2 dte = obj as EnvDTE80.DTE2;
-                        
-                        var solutionName = dte.Solution.FullName;
-                        
-                        if (solutionName == solutionPath)
-                        {
-                            _vsInstance = dte;
-                            break;
-                        }
-                    }
+                    if (solutionName != solutionPath) continue;
                 }
 
-                if (_vsInstance == null)
-                {
-                    Type visualStudioType = Type.GetTypeFromProgID(ProgramId, true);
-                    _vsInstance = Activator.CreateInstance(visualStudioType) as EnvDTE80.DTE2;
-                }
+                _vsInstance = dte;
+
+                break;
             }
+
+            if (_vsInstance != null) return;
+
+            var visualStudioType = Type.GetTypeFromProgID(ProgramId, true);
+
+            if (visualStudioType != null)
+                _vsInstance = Activator.CreateInstance(visualStudioType) as EnvDTE80.DTE2;
         }
         catch (Exception ex)
         {
@@ -96,7 +102,16 @@ public static class VisualStudio
             _vsInstance.Solution.Close();
         }
 
-        _vsInstance?.Quit();
+        try
+        {
+            _vsInstance?.Quit();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex);
+
+            Logger.Log(MessageType.Error, "Failed to close Visual Studio.");
+        }
     }
 
     public static bool AddFilesToSolution(string solution, string projectName, string[] files)
@@ -112,21 +127,20 @@ public static class VisualStudio
 
                 foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
                 {
-                    if (project.UniqueName.Contains(projectName))
-                    {
-                        foreach (var file in files)
-                        {
-                            try
-                            {
-                                project.ProjectItems.AddFromFile(file);
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.WriteLine(ex.Message);
-                                Debug.WriteLine("failed to add files to Visual Studio project");
+                    if (!project.UniqueName.Contains(projectName)) continue;
 
-                                return false;
-                            }
+                    foreach (var file in files)
+                    {
+                        try
+                        {
+                            project.ProjectItems.AddFromFile(file);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex.Message);
+                            Debug.WriteLine("failed to add files to Visual Studio project");
+
+                            return false;
                         }
                     }
                 }
@@ -146,8 +160,98 @@ public static class VisualStudio
         {
             Debug.WriteLine(ex.Message);
             Debug.WriteLine("failed to add files to Visual Studio project");
+
             return false;
         }
         return true;
+    }
+
+    public static bool IsDebugging()
+    {
+        var result = false;
+
+        for (var i = 0; i < 3; i++)
+        {
+            try
+            {
+                result = _vsInstance != null &&
+                         (_vsInstance.Debugger.CurrentProgram != null ||
+                          _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+
+                if (!result) System.Threading.Thread.Sleep(1000);
+            }
+        }
+
+        return result;
+    }
+
+    internal static void BuildSolution(Project project, string configName, bool showWindow = true)
+    {
+        if (IsDebugging())
+        {
+            Logger.Log(MessageType.Error, "Visual Studio is currently debugging.");
+
+            return;
+        }
+
+        OpenVisualStudio(project.Solution);
+
+        BuildSucceeded = false;
+        BuildFinished = false;
+
+        for (var i = 0; i < 3; i++)
+        {
+            try
+            {
+                if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
+
+                _vsInstance.MainWindow.Visible = showWindow;
+
+                _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildProjConfigBegin;
+                _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildProjConfigDone;
+
+                try
+                {
+                    foreach (var pdbFile in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), ".pdb"))
+                    {
+                        File.Delete(pdbFile);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+
+                _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
+                _vsInstance.ExecuteCommand("Build.BuildSolution");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Debug.WriteLine($"Attempt {i}: failed to build project {project.Name}.");
+
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
+    }
+
+    private static void OnBuildProjConfigDone(string project, string projectConfig, string platform, string solutionConfig, bool success)
+    {
+        if (BuildFinished) return;
+
+        if (success) Logger.Log(MessageType.Info, $"Building {projectConfig} configuration succeed.");
+        else Logger.Log(MessageType.Error, $"Building {projectConfig} configuration failed.");
+
+        BuildFinished = true;
+        BuildSucceeded = success;
+    }
+
+    private static void OnBuildProjConfigBegin(string project, string projectConfig, string platform, string solutionConfig)
+    {
+        Logger.Log(MessageType.Info, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
     }
 }
