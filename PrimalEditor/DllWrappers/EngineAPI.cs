@@ -1,10 +1,12 @@
 ﻿// ReSharper disable InconsistentNaming
-
+// ReSharper disable UnusedMember.Global
+using System;
 using PrimalEditor.Components;
 using PrimalEditor.EngineAPIStructs;
 
 using System.Numerics;
 using System.Runtime.InteropServices;
+
 
 namespace PrimalEditor.EngineAPIStructs
 {
@@ -17,9 +19,16 @@ namespace PrimalEditor.EngineAPIStructs
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    internal class ScriptComponent
+    {
+        public IntPtr ScriptCreator;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     internal class GameEntityDescriptor
     {
         public TransformComponent Transform = new();
+        public ScriptComponent Script = new ScriptComponent();
     }
 }
 
@@ -36,7 +45,14 @@ namespace PrimalEditor
         [DllImport(_engineDll, CharSet = CharSet.Ansi)]
         public static extern int UnloadGameCodeDll();
 
-        public static class EntityAPI
+        [DllImport(_engineDll)]
+        public static extern IntPtr GetScriptCreator(string name);
+
+        [DllImport(_engineDll)]
+        [return: MarshalAs(UnmanagedType.SafeArray)]
+        public static extern string[] GetScriptNames();
+
+        internal static class EntityAPI
         {
             [DllImport(_engineDll)]
             private static extern int CreateGameEntity(GameEntityDescriptor descriptor);
@@ -51,6 +67,10 @@ namespace PrimalEditor
                     descriptor.Transform.Position = c.Position;
                     descriptor.Transform.Rotation = c.Rotation;
                     descriptor.Transform.Scale = c.Scale;
+                }
+
+                {
+                    // var c = gameEntity.GetComponent<Script>();
                 }
 
                 return CreateGameEntity(descriptor);
