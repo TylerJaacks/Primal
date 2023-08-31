@@ -7,7 +7,7 @@
              xmlns:viewmodel="clr-namespace:PrimalEditor.Components"
              xmlns:controls="clr-namespace:PrimalEditor.Utilities.Controls"
              mc:Ignorable="d" 
-             d:DataContext="{d:DesignInstance Type=viewmodel:MsTransform}"
+             d:DataContext="{d:DesignInstance Type=viewmodel:MSTransform}"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource LightTextBlockStyle}"/>

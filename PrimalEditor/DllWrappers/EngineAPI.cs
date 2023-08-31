@@ -1,12 +1,12 @@
 ﻿// ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 using System;
-using PrimalEditor.Components;
-using PrimalEditor.EngineAPIStructs;
-
 using System.Numerics;
 using System.Runtime.InteropServices;
 
+using PrimalEditor.Components;
+using PrimalEditor.EngineAPIStructs;
+#pragma warning disable SYSLIB1054
 
 namespace PrimalEditor.EngineAPIStructs
 {

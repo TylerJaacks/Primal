@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 using PrimalEditor.GameDev;
@@ -57,6 +58,21 @@ namespace PrimalEditor.GameProject
         public BuildConfigType DllBuildConfig =>
             BuildConfig == 0 ? BuildConfigType.DebugEditor : BuildConfigType.ReleaseEditor;
 
+        private string[] _availableScripts;
+
+        public string[] AvailableScripts
+        {
+            get => _availableScripts;
+            set
+            {
+                if (_availableScripts == value) return;
+
+                _availableScripts = value;
+
+                OnPropertyChanged(nameof(AvailableScripts));
+            }
+        }
+
         public enum BuildConfigType
         {
             Debug,
@@ -91,6 +107,38 @@ namespace PrimalEditor.GameProject
         public ICommand RemoveSceneCommand { get; private set; }
         public ICommand SaveCommand { get; private set; }
         public ICommand BuildCommand { get; private set; }
+
+
+
+        public Project(string name, string path)
+        {
+            Name = name;
+            Path = path;
+
+            OnDeserialized(new StreamingContext());
+        }
+
+        public Project()
+        {
+
+        }
+
+        [OnDeserialized]
+        private async void OnDeserialized(StreamingContext context)
+        {
+            if (_scenes != null)
+            {
+                Scenes = new ReadOnlyObservableCollection<Scene>(_scenes);
+
+                OnPropertyChanged(nameof(Scenes));
+            }
+
+            ActiveScene = Scenes.FirstOrDefault(x => x.IsActive);
+
+            SetCommands();
+
+            await BuildGameCodeDll(false);
+        }
 
         private void SetCommands()
         {
@@ -132,27 +180,13 @@ namespace PrimalEditor.GameProject
             OnPropertyChanged(nameof(BuildCommand));
         }
 
-        [OnDeserialized]
-        private async void OnDeserialized(StreamingContext context)
-        {
-            if (_scenes != null)
-            {
-                Scenes = new ReadOnlyObservableCollection<Scene>(_scenes);
-
-                OnPropertyChanged(nameof(Scenes));
-            }
-
-            ActiveScene = Scenes.FirstOrDefault(x => x.IsActive);
-
-            SetCommands();
-
-            await BuildGameCodeDll(false);
-        }
-
         private void UnloadGameCodeDll()
         {
-            if (EngineAPI.UnloadGameCodeDll() != 0)
-                Logger.Log(MessageType.Info, "Game code dll unloaded successfully.");
+            if (EngineAPI.UnloadGameCodeDll() == 0) return;
+
+            AvailableScripts = null;
+
+            Logger.Log(MessageType.Info, "Game code dll unloaded successfully.");
         }
 
         private void LoadGameCodeDll()
@@ -161,8 +195,14 @@ namespace PrimalEditor.GameProject
 
             var dll = $@"{Path}x64\{configName}\{Name}.dll";
 
+            AvailableScripts = null;
+
             if (File.Exists(dll) && EngineAPI.LoadGameCodeDll(dll) != 0)
+            {
+                AvailableScripts = EngineAPI.GetScriptNames();
+
                 Logger.Log(MessageType.Info, "Game code dll loaded successfully.");
+            }
             else
                 Logger.Log(MessageType.Warning, "Failed to load game code dll. Try to build the project first.");
         }
@@ -188,13 +228,6 @@ namespace PrimalEditor.GameProject
             }
         }
 
-        public void Unload()
-        {
-            VisualStudio.CloseVisualStudio();
-
-            UndoRedo.Reset();
-        }
-
         private void AddScene(string sceneName)
         {
             Debug.Assert(!string.IsNullOrEmpty(sceneName.Trim()));
@@ -215,26 +248,19 @@ namespace PrimalEditor.GameProject
             return Serializer.FromFile<Project>(file);
         }
 
+        public void Unload()
+        {
+            VisualStudio.CloseVisualStudio();
+
+            UndoRedo.Reset();
+        }
+
         public static void Save(Project project)
         {
             Serializer.ToFile(project, project.FullPath);
             Logger.Log(MessageType.Info, $"Project saved to {project.FullPath}");
         }
 
-        private static string GetConfigName(BuildConfigType config) => 
-            BuildConfigurationNames[(int)config];
-
-        public Project(string name, string path)
-        {
-            Name = name;
-            Path = path;
-
-            OnDeserialized(new StreamingContext());
-        }
-
-        public Project()
-        {
-
-        }
+        private static string GetConfigName(BuildConfigType config) => BuildConfigurationNames[(int)config];
     }
 }

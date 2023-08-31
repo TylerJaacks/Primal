@@ -1,3 +1,4 @@
+// ReSharper disable CppInconsistentNaming
 #include "Common.h"
 #include "CommonHeaders.h"
 
@@ -60,5 +61,5 @@ EDITOR_INTERFACE script::detail::script_creator GetScriptCreator(const char* nam
 
 EDITOR_INTERFACE LPSAFEARRAY GetScriptNames()
 {
-	auto name = (game_code_dll && get_script_names) ? get_script_names() : nullptr;
+	return (game_code_dll && get_script_names) ? get_script_names() : nullptr;
 }

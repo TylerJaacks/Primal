@@ -34,14 +34,14 @@ namespace PrimalEditor.Editors
         {
             Loaded -= OnTransformViewLoaded;
 
-            ((MsTransform) DataContext).PropertyChanged += (s, _) => _propertyChanged = true;
+            ((MSTransform) DataContext).PropertyChanged += (s, _) => _propertyChanged = true;
         }
 
         private Action GetAction(Func<Transform, (Transform transform, Vector3)> selector, Action<(Transform transform, Vector3)> forEachAction)
         {
             _propertyChanged = false;
 
-            if (DataContext is not MsTransform msTransform)
+            if (DataContext is not MSTransform msTransform)
             {
                 _undoAction = null;
                 _propertyChanged = false;
@@ -55,7 +55,7 @@ namespace PrimalEditor.Editors
             {
                 selection.ForEach(forEachAction);
 
-                (Instance.DataContext as MsEntity)?.GetMsComponent<MsTransform>().Refresh();
+                (Instance.DataContext as MsEntity)?.GetMsComponent<MSTransform>().Refresh();
             };
         }
 

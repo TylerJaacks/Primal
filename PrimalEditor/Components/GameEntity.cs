@@ -1,17 +1,18 @@
-﻿using PrimalEditor.GameProject;
-using PrimalEditor.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 
+using PrimalEditor.GameProject;
+using PrimalEditor.Utilities;
 
 namespace PrimalEditor.Components
 {
     [DataContract]
     [KnownType(typeof(Transform))]
+    [KnownType(typeof(Script))]
     public class GameEntity : ViewModelBase
     { 
         private int _entityId = ID.INVALID_ID;
@@ -95,7 +96,7 @@ namespace PrimalEditor.Components
         public Scene ParentScene { get; private set; }
 
         [DataMember(Name = nameof(Components))]
-        private readonly ObservableCollection<Component> _components = new ObservableCollection<Component>();
+        private readonly ObservableCollection<Component> _components = new();
 
         public ReadOnlyObservableCollection<Component> Components { get; private set; }
 
@@ -103,8 +104,44 @@ namespace PrimalEditor.Components
 
         public T GetComponent<T>() where T : Component => GetComponent(typeof(T)) as T;
 
+        public bool AddComponent(Component component)
+        {
+            Debug.Assert(component != null);
+
+            if (Components.Any(x => x.GetType() == component.GetType()))
+            {
+                Logger.Log(MessageType.Error, $"Entity {Name} already has a {component.GetType().Name}");
+                
+                return false;
+            }
+
+            IsActive = false;
+
+            _components.Add(component);
+
+            IsActive = true;
+
+            return true;
+
+        }
+
+        public void RemoveComponent(Component component)
+        {
+            Debug.Assert(component != null);
+
+            if (component is Transform) return;
+
+            if (!_components.Contains(component)) return;
+
+            IsActive = false;
+
+            _components.Remove(component);
+
+            IsActive = true;
+        }
+
         [OnDeserialized]
-        void OnDeserialized(StreamingContext context)
+        private void OnDeserialized(StreamingContext context)
         {
             if (_components == null) return;
 

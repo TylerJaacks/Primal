@@ -1,7 +1,6 @@
-﻿
-using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.Serialization;
+
 using PrimalEditor.Utilities;
 
 namespace PrimalEditor.Components
@@ -59,10 +58,10 @@ namespace PrimalEditor.Components
 
         public Transform(GameEntity owner) : base(owner) { }
 
-        public override IMsComponent GetMultliselectionComponent(MsEntity msEntity) => new MsTransform(msEntity);
+        public override IMsComponent GetMultliselectionComponent(MsEntity msEntity) => new MSTransform(msEntity);
     }
 
-    internal sealed class MsTransform : MsComponent<Transform>
+    internal sealed class MSTransform : MsComponent<Transform>
     {
         // Position
         private float? _posX;
@@ -248,7 +247,7 @@ namespace PrimalEditor.Components
             return true;
         }
 
-        public MsTransform(MsEntity msEntity) : base(msEntity)
+        public MSTransform(MsEntity msEntity) : base(msEntity)
         {
             Refresh();
         }
