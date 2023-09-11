@@ -1,17 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
-
+using System.Windows.Media.Animation;
 using PrimalEditor.Components;
 using PrimalEditor.GameProject;
 using PrimalEditor.Utilities;
 
 namespace PrimalEditor.Editors
 {
+    public class NullableBoolToBoolConvertor : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is bool and true;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value is bool and true;
+        }
+    }
+
     /// <summary>
     /// Interaction logic for GameEntityView.xaml
     /// </summary>

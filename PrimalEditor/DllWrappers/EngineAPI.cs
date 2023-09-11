@@ -1,11 +1,15 @@
 ﻿// ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
 using PrimalEditor.Components;
 using PrimalEditor.EngineAPIStructs;
+using PrimalEditor.GameProject;
+using PrimalEditor.Utilities;
+
 #pragma warning disable SYSLIB1054
 
 namespace PrimalEditor.EngineAPIStructs
@@ -70,7 +74,15 @@ namespace PrimalEditor
                 }
 
                 {
-                    // var c = gameEntity.GetComponent<Script>();
+                    var c = gameEntity.GetComponent<Script>();
+
+                    if (c == null || Project.Current == null) return CreateGameEntity(descriptor);
+                    
+                    if (Project.Current.AvailableScripts.Contains(c.Name))
+                        descriptor.Script.ScriptCreator = GetScriptCreator(c.Name);
+                    
+                    else
+                        Logger.Log(MessageType.Error, $"Unable to find script with name {c.Name}. GameEntity will be created without script component.");
                 }
 
                 return CreateGameEntity(descriptor);

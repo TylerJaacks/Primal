@@ -1,11 +1,12 @@
-﻿using PrimalEditor.Utilities;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
-using EnvDTE;
+
+using PrimalEditor.Utilities;
+
 using Project = PrimalEditor.GameProject.Project;
 
 namespace PrimalEditor.GameDev;
@@ -169,20 +170,23 @@ public static class VisualStudio
     public static bool IsDebugging()
     {
         var result = false;
+        var tryAgain = true;
 
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 3 && tryAgain; ++i)
         {
             try
             {
                 result = _vsInstance != null &&
                          (_vsInstance.Debugger.CurrentProgram != null ||
                           _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
+
+                tryAgain = false;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
 
-                if (!result) System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(1000);
             }
         }
 
@@ -203,7 +207,7 @@ public static class VisualStudio
         BuildSucceeded = false;
         BuildFinished = false;
 
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 3 && !BuildFinished; ++i)
         {
             try
             {
