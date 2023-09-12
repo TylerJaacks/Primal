@@ -2,15 +2,19 @@
 using System.Windows.Controls;
 
 using PrimalEditor.GameDev;
+using PrimalEditor.Utilities.Controls;
 
 namespace PrimalEditor.Editors
 {
+    /// <summary>
+    /// Interaction logic for WorldEditorView.xaml
+    /// </summary>
     public partial class WorldEditorView : UserControl
     {
         public WorldEditorView()
         {
             InitializeComponent();
-            
+
             Loaded += OnWorldEditorViewLoaded;
         }
 

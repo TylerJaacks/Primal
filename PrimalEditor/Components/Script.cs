@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace PrimalEditor.Components;
 
@@ -29,6 +31,13 @@ public class Script : Component
     }
 
     public override IMsComponent GetMultliselectionComponent(MsEntity msEntity) => new MSScript(msEntity);
+    public override void WriteToBinary(BinaryWriter bw)
+    {
+        var nameBytes = Encoding.UTF8.GetBytes(Name);
+
+        bw.Write(nameBytes.Length);
+        bw.Write(nameBytes);
+    }
 }
 
 internal sealed class MSScript : MsComponent<Script>

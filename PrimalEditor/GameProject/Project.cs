@@ -1,4 +1,5 @@
-﻿using System;
+﻿// ReSharper disable AsyncVoidLambda
+using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -6,8 +7,9 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+
+using PrimalEditor.Common;
 using PrimalEditor.Components;
 using PrimalEditor.GameDev;
 using PrimalEditor.Utilities;
@@ -99,6 +101,8 @@ namespace PrimalEditor.GameProject
         public static Project Current => 
             Application.Current.MainWindow?.DataContext as Project;
 
+        private static string GetConfigName(BuildConfigType config) => BuildConfigurationNames[(int)config];
+
         public static UndoRedo UndoRedo { get; } = new UndoRedo();
 
         public ICommand UndoCommand { get; private set; }
@@ -107,7 +111,9 @@ namespace PrimalEditor.GameProject
         public ICommand RemoveSceneCommand { get; private set; }
         public ICommand SaveCommand { get; private set; }
         public ICommand BuildCommand { get; private set; }
-
+        public ICommand DebugStartCommand { get; private set; }
+        public ICommand DebugStartWithoutDebuggingCommand { get; private set; }
+        public ICommand DebugStopCommand { get; private set; }
 
 
         public Project(string name, string path)
@@ -172,7 +178,12 @@ namespace PrimalEditor.GameProject
             UndoCommand = new RelayCommand<object>(x => UndoRedo.Undo(), x => UndoRedo.UndoList.Any());
             RedoCommand = new RelayCommand<object>(x => UndoRedo.Redo(), x => UndoRedo.RedoList.Any());
             SaveCommand = new RelayCommand<object>(x => Save(this));
+
             BuildCommand = new RelayCommand<bool>(async x => await BuildGameCodeDll(x), x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished);
+
+            DebugStartCommand = new RelayCommand<object>(async x => await RunGame(true), x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished);
+            DebugStartWithoutDebuggingCommand = new RelayCommand<object>(async x => await RunGame(false), x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished);
+            DebugStopCommand = new RelayCommand<object>(async x => await StopGame(), x => VisualStudio.IsDebugging());
 
             OnPropertyChanged(nameof(AddSceneCommand));
             OnPropertyChanged(nameof(RemoveSceneCommand));
@@ -180,6 +191,9 @@ namespace PrimalEditor.GameProject
             OnPropertyChanged(nameof(RedoCommand));
             OnPropertyChanged(nameof(SaveCommand));
             OnPropertyChanged(nameof(BuildCommand));
+            OnPropertyChanged(nameof(DebugStartCommand));
+            OnPropertyChanged(nameof(DebugStartWithoutDebuggingCommand));
+            OnPropertyChanged(nameof(DebugStopCommand));
         }
 
         private void UnloadGameCodeDll()
@@ -270,6 +284,43 @@ namespace PrimalEditor.GameProject
             Logger.Log(MessageType.Info, $"Project saved to {project.FullPath}");
         }
 
-        private static string GetConfigName(BuildConfigType config) => BuildConfigurationNames[(int)config];
+        private void SaveToBinary()
+        {
+            var configName = GetConfigName(StandaloneBuildConfig);
+            var bin = $@"{Path}x64\{configName}\game.bin";
+
+            using var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write));
+
+            bw.Write(ActiveScene.GameEntities.Count);
+
+            foreach (var entity in ActiveScene.GameEntities)
+            {
+                bw.Write(0);
+                bw.Write(entity.Components.Count);
+
+                foreach (var component in entity.Components)
+                {
+                    bw.Write((int) component.ToEnumType());
+
+                    component.WriteToBinary(bw);
+                }
+            }
+        }
+
+        private async Task RunGame(bool debug)
+        {
+            var configName = GetConfigName(StandaloneBuildConfig);
+
+            await Task.Run(() => VisualStudio.BuildSolution(this, configName, debug));
+
+            if (VisualStudio.BuildSucceeded) 
+            {
+                SaveToBinary();
+
+                await Task.Run(() => VisualStudio.Run(this, configName, debug));
+            }
+        }
+
+        private async Task StopGame() => await Task.Run(VisualStudio.Stop);
     }
 }

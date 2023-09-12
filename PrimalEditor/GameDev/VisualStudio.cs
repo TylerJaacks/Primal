@@ -258,4 +258,16 @@ public static class VisualStudio
     {
         Logger.Log(MessageType.Info, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
     }
+
+    public static void Run(Project project, string configName, bool debug)
+    {
+        if (_vsInstance != null && !IsDebugging() && BuildFinished && BuildSucceeded)
+            _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+    }
+
+    public static void Stop()
+    {
+        if (_vsInstance != null && IsDebugging())
+            _vsInstance.ExecuteCommand("Debug.StopDebugging");
+    }
 }

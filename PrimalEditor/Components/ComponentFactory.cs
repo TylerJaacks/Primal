@@ -23,4 +23,14 @@ internal static class ComponentFactory
 
         return Function[(int)componentType];
     }
+
+    public static ComponentType ToEnumType(this Component component)
+    {
+        return component switch
+        {
+            Transform _ => ComponentType.Transform,
+            Script _ => ComponentType.Script,
+            _ => throw new ArgumentException("Unknown component type.")
+        };
+    }
 }

@@ -51,6 +51,7 @@
     <ClCompile Include="Core\main.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Engine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

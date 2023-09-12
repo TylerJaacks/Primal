@@ -1,21 +1,17 @@
-﻿// Copyright (c) Arash Khatami
-// Distributed under the MIT license. See the LICENSE file in the project root for more information.
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Windows.Input;
 
-namespace PrimalEditor
+namespace PrimalEditor.Common
 {
-    class RelayCommand<T> : ICommand
+    internal class RelayCommand<T> : ICommand
     {
         private readonly Action<T> _execute;
         private readonly Predicate<T> _canExecute;
 
         public event EventHandler CanExecuteChanged
         {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
         }
 
         public bool CanExecute(object parameter)

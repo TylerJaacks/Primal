@@ -1,10 +1,11 @@
-﻿using PrimalEditor.Components;
-using PrimalEditor.Utilities;
-
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Windows.Input;
+
+using PrimalEditor.Common;
+using PrimalEditor.Components;
+using PrimalEditor.Utilities;
 
 namespace PrimalEditor.GameProject
 {
@@ -18,11 +19,11 @@ namespace PrimalEditor.GameProject
             get => _name;
             set
             {
-                if (_name != value)
-                {
-                    _name = value;
-                    OnPropertyChanged(nameof(Name));
-                }
+                if (_name == value) return;
+
+                _name = value;
+
+                OnPropertyChanged(nameof(Name));
             }
         }
 
@@ -36,11 +37,11 @@ namespace PrimalEditor.GameProject
             get => _isActive;
             set
             {
-                if (_isActive != value)
-                {
-                    _isActive = value;
-                    OnPropertyChanged(nameof(IsActive));
-                }
+                if (_isActive == value) return;
+
+                _isActive = value;
+
+                OnPropertyChanged(nameof(IsActive));
             }
         }
 
@@ -51,27 +52,14 @@ namespace PrimalEditor.GameProject
         public ICommand AddGameEntityCommand { get; private set; }
         public ICommand RemoveGameEntityCommand { get; private set; }
 
-        private void AddGameEnity(GameEntity entity, int index = -1)
+        public Scene(Project project, string name)
         {
-            Debug.Assert(!_gameEntities.Contains(entity));
-            
-            entity.IsActive = IsActive;
-            
-            if (index == -1)
-            {
-                _gameEntities.Add(entity);
-            }
-            else
-            {
-                _gameEntities.Insert(index, entity);
-            }
-        }
+            Debug.Assert(project != null);
 
-        private void RemoveGameEnity(GameEntity entity)
-        {
-            Debug.Assert(_gameEntities.Contains(entity));
-            entity.IsActive = false;
-            _gameEntities.Remove(entity);
+            Project = project;
+            Name = name;
+
+            OnDeserialized(new StreamingContext());
         }
 
         [OnDeserialized]
@@ -82,40 +70,54 @@ namespace PrimalEditor.GameProject
                 GameEntities = new ReadOnlyObservableCollection<GameEntity>(_gameEntities);
                 OnPropertyChanged(nameof(GameEntities));
             }
+
+            if (_gameEntities == null) return;
+
             foreach (var entity in _gameEntities)
-            {
                 entity.IsActive = IsActive;
-            }
 
             AddGameEntityCommand = new RelayCommand<GameEntity>(x =>
             {
-                AddGameEnity(x);
+                AddGameEntity(x);
                 var entityIndex = _gameEntities.Count - 1;
 
                 Project.UndoRedo.Add(new UndoRedoAction(
-                    () => RemoveGameEnity(x),
-                    () => AddGameEnity(x, entityIndex),
+                    () => RemoveGameEntity(x),
+                    () => AddGameEntity(x, entityIndex),
                     $"Add {x.Name} to {Name}"));
             });
 
             RemoveGameEntityCommand = new RelayCommand<GameEntity>(x =>
             {
                 var entityIndex = _gameEntities.IndexOf(x);
-                RemoveGameEnity(x);
+
+                RemoveGameEntity(x);
 
                 Project.UndoRedo.Add(new UndoRedoAction(
-                    () => AddGameEnity(x, entityIndex),
-                    () => RemoveGameEnity(x),
+                    () => AddGameEntity(x, entityIndex),
+                    () => RemoveGameEntity(x),
                     $"Remove {x.Name}"));
             });
         }
 
-        public Scene(Project project, string name)
+        private void AddGameEntity(GameEntity entity, int index = -1)
         {
-            Debug.Assert(project != null);
-            Project = project;
-            Name = name;
-            OnDeserialized(new StreamingContext());
+            Debug.Assert(!_gameEntities.Contains(entity));
+
+            entity.IsActive = IsActive;
+
+            if (index == -1)
+                _gameEntities.Add(entity);
+            else
+                _gameEntities.Insert(index, entity);
+        }
+
+        private void RemoveGameEntity(GameEntity entity)
+        {
+            Debug.Assert(_gameEntities.Contains(entity));
+
+            entity.IsActive = false;
+            _gameEntities.Remove(entity);
         }
     }
 }
