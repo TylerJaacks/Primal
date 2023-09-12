@@ -23,8 +23,8 @@ namespace
 
 			transform::init_info info{};
 
-			memcpy(&info.position[0], &position[0], sizeof(f32) * _countof(position));
-			memcpy(&info.scale[0], &scale[0], sizeof(f32) * _countof(scale));
+			memcpy(&info.position[0], &position[0], sizeof(position));
+			memcpy(&info.scale[0], &scale[0], sizeof(scale));
 
 			const XMFLOAT3A rot{ &rotation[0] };
 			const XMVECTOR quat = XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3A(&rot));
@@ -33,7 +33,7 @@ namespace
 
 			XMStoreFloat4A(&rot_quat, quat);
 
-			memcpy(&info.rotation[0], &rot_quat.x, sizeof(f32) * _countof(info.rotation));
+			memcpy(&info.rotation[0], &rot_quat.x, sizeof(rotation));
 
 			return info;
 		}

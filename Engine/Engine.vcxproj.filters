@@ -37,6 +37,7 @@
     <ClInclude Include="EngineAPI\ScriptComponent.h">
       <Filter>EngineAPI</Filter>
     </ClInclude>
+    <ClInclude Include="Content\ContentLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\Entity.cpp">
@@ -52,6 +53,7 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Core\Engine.cpp" />
+    <ClCompile Include="Content\ContentLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
