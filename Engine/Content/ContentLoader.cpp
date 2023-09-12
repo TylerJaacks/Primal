@@ -80,6 +80,14 @@ namespace primal::content
 #if !defined(SHIPPING)
 	bool load_game()
 	{
+		wchar_t path[MAX_PATH];
+
+		if (const u32 length{ GetModuleFileName(nullptr, &path[0], MAX_PATH) }; !length || GetLastError() == ERROR_INSUFFICIENT_BUFFER) return false;
+
+		const std::filesystem::path p{ path };
+
+		SetCurrentDirectory(p.parent_path().wstring().c_str());
+
 		std::ifstream game("game.bin", std::ios::in | std::ios::binary);
 
 		const utl::vector<u8> buffer(std::istreambuf_iterator<char>(game), {});

@@ -6,6 +6,7 @@
 #include "../Components/Transform.h"
 #include "../Components/Script.h"
 
+#include <filesystem>
 #include <fstream>
 #include <ios>
 
