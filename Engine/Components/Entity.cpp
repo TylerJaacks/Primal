@@ -26,7 +26,7 @@ namespace primal::game_entity {
 
 			assert(!is_alive(id));
 
-			free_ids.pop_front();
+			free_ids.pop_back();
 
 			id = entity_id{ id::new_generation(id) };
 
@@ -38,8 +38,6 @@ namespace primal::game_entity {
 
 			generations.push_back(0);
 
-			// Resize components
-			// NOTE: we don't call resize(), so the number of memory allocations stays low
 			transforms.emplace_back();
 			scripts.emplace_back();
 		}
@@ -47,14 +45,12 @@ namespace primal::game_entity {
 		const entity new_entity{ id };
 		const id::id_type index{ id::index(id) };
 
-		// Create transform component
 		assert(!transforms[index].is_valid());
 
 		transforms[index] = transform::create(*info.transform, new_entity);
 
 		if (!transforms[index].is_valid()) return {};
 
-		// Create script component
 		if (info.script && info.script->script_creator)
 		{
 			assert(!scripts[index].is_valid());
@@ -94,7 +90,6 @@ namespace primal::game_entity {
 		const id::id_type index{ id::index(id) };
 
 		assert(index < generations.size());
-		assert(generations[index] == id::generation(id));
 
 		return (generations[index] == id::generation(id) && transforms[index].is_valid());
 	}

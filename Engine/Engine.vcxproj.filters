@@ -38,6 +38,9 @@
       <Filter>EngineAPI</Filter>
     </ClInclude>
     <ClInclude Include="Content\ContentLoader.h" />
+    <ClInclude Include="Platform\Window.h" />
+    <ClInclude Include="Platform\Platform.h" />
+    <ClInclude Include="Platform\PlatformTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\Entity.cpp">
@@ -54,6 +57,7 @@
     </ClCompile>
     <ClCompile Include="Core\Engine.cpp" />
     <ClCompile Include="Content\ContentLoader.cpp" />
+    <ClCompile Include="Platform\Platform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
