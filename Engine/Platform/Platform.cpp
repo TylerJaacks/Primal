@@ -60,24 +60,47 @@ namespace primal::platform
 			return windows[id];
 		}
 
-		window_info& get_from_handle(window_handle handle)
+		window_info& get_from_handle(const window_handle handle)
 		{
 			const window_id id { static_cast<id::id_type>(GetWindowLongPtr(handle, GWLP_USERDATA)) };
 
 			return get_from_id(id);
 		}
 
+		// ReSharper disable CppParameterMayBeConst
 		LRESULT CALLBACK internal_window_proc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			window_info* info{ nullptr };
 
-			switch (msg)
+			switch (msg)  // NOLINT(hicpp-multiway-paths-covered)
 			{
 			case WM_DESTROY:
 				get_from_handle(hwnd).is_closed = true;
 				break;
-			default: 
+			case WM_EXITSIZEMOVE:
+				info = &get_from_handle(hwnd);
 				break;
+			case WM_SIZE:
+				if (wparam == SIZE_MAXIMIZED)
+				{
+					info = &get_from_handle(hwnd);
+				}
+				break;
+			case WM_SYSCOMMAND:
+				if (wparam == SC_RESTORE)
+				{
+					info = &get_from_handle(hwnd);
+				}
+				break;
+			default:
+				break;
+			}
+
+			if (info)
+			{
+				assert(info->hwnd);
+
+				GetClientRect(info->hwnd, info->is_fullscreen ? &info->fullscreen_area : &info->client_area);
 			}
 
 			const LONG_PTR long_ptr{ GetWindowLongPtr(hwnd, 0) };
@@ -128,7 +151,7 @@ namespace primal::platform
 		const s32 width{ (init_info && init_info->width) ? init_info->width : rc.right - rc.left };
 		const s32 height{ (init_info && init_info->height) ? init_info->height : rc.bottom - rc.top };
 
-		info.style |= parent ? WS_CHILD : WS_OVERLAPPED;
+		info.style |= parent ? WS_CHILD : WS_OVERLAPPEDWINDOW;
 
 		info.hwnd = CreateWindowEx(
 			0,
@@ -145,6 +168,8 @@ namespace primal::platform
 
 		if (info.hwnd)
 		{
+			SetLastError(0);
+
 			const window_id id{ add_to_windows(info) };
 
 			SetWindowLongPtr(info.hwnd, GWLP_USERDATA, (LONG_PTR) id);
