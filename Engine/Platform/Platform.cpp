@@ -116,7 +116,6 @@ namespace primal::platform
 		const window_proc callback{ init_info ? init_info->callback : nullptr };
 		const window_handle parent{ init_info ? init_info->parent : nullptr };
 
-
 		WNDCLASSEX wc;
 
 		ZeroMemory(&wc, sizeof(wc));
@@ -138,18 +137,20 @@ namespace primal::platform
 
 		window_info info{};
 
-		RECT rc{ info.client_area };
+		info.client_area.right = (init_info && init_info->width) ? info.client_area.left + init_info->width : info.client_area.right;
+		info.client_area.bottom = (init_info && init_info->height) ? info.client_area.top + init_info->height : info.client_area.bottom;
 
-		AdjustWindowRect(&rc, info.style, FALSE);
+		RECT rect{ info.client_area };
 
+		AdjustWindowRect(&rect, info.style, FALSE);
 
 		const wchar_t* caption{ (init_info && init_info->caption) ? init_info->caption : L"Primal Game" };
 
-		const s32 left{ (init_info && init_info->left) ? init_info->left : info.client_area.left };
-		const s32 top{ (init_info && init_info->top) ? init_info->top : info.client_area.top };
+		const s32 left{ init_info ? init_info->left : info.top_left.x };
+		const s32 top{ init_info ? init_info->top : info.top_left.y };
 
-		const s32 width{ (init_info && init_info->width) ? init_info->width : rc.right - rc.left };
-		const s32 height{ (init_info && init_info->height) ? init_info->height : rc.bottom - rc.top };
+		const s32 width{ rect.right - rect.left };
+		const s32 height{ rect.bottom - rect.top };
 
 		info.style |= parent ? WS_CHILD : WS_OVERLAPPEDWINDOW;
 
@@ -168,7 +169,7 @@ namespace primal::platform
 
 		if (info.hwnd)
 		{
-			SetLastError(0);
+			DEBUG_OP(SetLastError(0));
 
 			const window_id id{ add_to_windows(info) };
 
@@ -258,18 +259,18 @@ namespace primal::platform
 
 	void set_window_caption(const window_id id, const wchar_t* caption)
 	{
-		const window_info& info{ get_from_id(id) };
+		const auto& [hwnd, client_area, fullscreen_area, top_left, style, is_fullscreen, is_closed]{ get_from_id(id) };
 
-		SetWindowText(info.hwnd, caption);
+		SetWindowText(hwnd, caption);
 	}
 
 	math::u32v4 get_window_size(const window_id id)
 	{
-		const window_info& info{ get_from_id(id) };
+		const auto& [hwnd, client_area, fullscreen_area, top_left, style, is_fullscreen, is_closed]{ get_from_id(id) };
 
-		const RECT area{ info.is_fullscreen ? info.fullscreen_area : info.client_area };
+		const auto [left, top, right, bottom]{ is_fullscreen ? fullscreen_area : client_area };
 
-		return { static_cast<u32>(area.left), static_cast<u32>(area.top), static_cast<u32>(area.right), static_cast<u32>(area.bottom) };
+		return { static_cast<u32>(left), static_cast<u32>(top), static_cast<u32>(right), static_cast<u32>(bottom) };
 	}
 
 	void resize_window(const window_id id, const u32 width, const u32 height)
@@ -288,7 +289,8 @@ namespace primal::platform
 	{
 		return get_from_id(id).is_closed;
 	}
-#elif
+#elif 
+#else
 #error "must implement at least one platform."
 #endif
 

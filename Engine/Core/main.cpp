@@ -1,17 +1,14 @@
 #ifdef _WIN64
-
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-
-#include <crtdbg.h>
 #include <Windows.h>
+#include <crtdbg.h>
+#ifndef USE_WITH_EDITOR
 
 extern bool engine_initialize();
 extern void engine_update();
 extern void engine_shutdown();
-
-#ifndef USE_WITH_EDITOR
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -27,9 +24,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		while (is_running)
 		{
-			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 			{
 				TranslateMessage(&msg);
+
 				DispatchMessage(&msg);
 
 				is_running &= (msg.message != WM_QUIT);
@@ -45,5 +43,4 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 }
 
 #endif
-
 #endif
