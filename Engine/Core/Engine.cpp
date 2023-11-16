@@ -16,6 +16,7 @@ namespace
 {
 	graphics::render_surface game_window{};
 
+	// ReSharper disable CppParameterMayBeConst
 	LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		switch (msg)

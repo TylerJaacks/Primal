@@ -4,13 +4,15 @@ using System;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-
+using EnvDTE80;
 using PrimalEditor.Components;
 using PrimalEditor.EngineAPIStructs;
 using PrimalEditor.GameProject;
 using PrimalEditor.Utilities;
 
 #pragma warning disable SYSLIB1054
+#pragma warning disable CA1401
+#pragma warning disable CA2101 
 
 namespace PrimalEditor.EngineAPIStructs
 {
@@ -38,7 +40,6 @@ namespace PrimalEditor.EngineAPIStructs
 
 namespace PrimalEditor
 {
-
     public static class EngineAPI
     {
         private const string _engineDll = "EngineDll.dll";
@@ -55,6 +56,15 @@ namespace PrimalEditor
         [DllImport(_engineDll)]
         [return: MarshalAs(UnmanagedType.SafeArray)]
         public static extern string[] GetScriptNames();
+
+        [DllImport(_engineDll)]
+        public static extern int CreateRenderSurface(IntPtr host, int width, int height);
+
+        [DllImport(_engineDll)]
+        public static extern void RemoveRenderSurface(int surfaceId);
+
+        [DllImport(_engineDll)]
+        public static extern IntPtr GetWindowHandle(int surfaceId);
 
         internal static class EntityAPI
         {
