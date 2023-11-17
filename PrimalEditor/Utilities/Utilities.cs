@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Runtime.InteropServices.JavaScript;
 using System.Windows.Threading;
 
 namespace PrimalEditor.Utilities
 {
+    // ReSharper disable once InconsistentNaming
     public static class ID
     {
+        // ReSharper disable once InconsistentNaming
         public static int INVALID_ID => -1;
         public static bool IsValid(int id) => id != INVALID_ID;
     }
@@ -26,7 +27,7 @@ namespace PrimalEditor.Utilities
         }
     }
 
-    class DelayEventTimerArgs : EventArgs
+    internal class DelayEventTimerArgs : EventArgs
     {
         public bool RepeatEvent { get; set; }
         public object Data { get; set; }
@@ -37,7 +38,7 @@ namespace PrimalEditor.Utilities
         }
     }
 
-    class DelayEventTimer
+    internal class DelayEventTimer
     {
         private readonly DispatcherTimer _timer;
         private readonly TimeSpan _delay;

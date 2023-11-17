@@ -273,12 +273,19 @@ namespace primal::platform
 	{
 		window_info& info{ get_from_id(id) };
 
-		RECT& area{ info.is_fullscreen ? info.fullscreen_area : info.client_area };
+		if (info.style & WS_CHILD)
+		{
+			GetClientRect(info.hwnd, &info.client_area);
+		}
+		else
+		{
+			RECT& area{ info.is_fullscreen ? info.fullscreen_area : info.client_area };
 
-		area.bottom = area.top + height; // NOLINT(bugprone-narrowing-conversions, cppcoreguidelines-narrowing-conversions)
-		area.right = area.left + width;  // NOLINT(bugprone-narrowing-conversions, cppcoreguidelines-narrowing-conversions)
+			area.bottom = area.top + height; // NOLINT(bugprone-narrowing-conversions, cppcoreguidelines-narrowing-conversions)
+			area.right = area.left + width;  // NOLINT(bugprone-narrowing-conversions, cppcoreguidelines-narrowing-conversions)
 
-		resize_window(info, area);
+			resize_window(info, area);
+		}
 	}
 
 	bool is_window_closed(const window_id id)

@@ -12,7 +12,7 @@ public class RenderSurfaceHost : HwndHost
     private readonly int _width = 800;
     private readonly int _height = 600;
 
-    public int SurfaceId { get; private set; } = ID.INVALID_ID;
+    public static int SurfaceId { get; private set; } = ID.INVALID_ID;
     private IntPtr _renderWindowHandle = IntPtr.Zero;
 
     private readonly DelayEventTimer _resizeTimer;
@@ -34,7 +34,10 @@ public class RenderSurfaceHost : HwndHost
     {
         e.RepeatEvent = Mouse.LeftButton == MouseButtonState.Pressed;
 
-        Logger.Log(MessageType.Info, "Resized");
+        if (!e.RepeatEvent)
+        {
+            EngineAPI.ResizeRenderSurface(SurfaceId);
+        }
     }
 
     protected override HandleRef BuildWindowCore(HandleRef hwndParent)
@@ -54,8 +57,10 @@ public class RenderSurfaceHost : HwndHost
     {
         EngineAPI.RemoveRenderSurface(SurfaceId);
         
-        SurfaceId = ID.INVALID_ID;
+        // TODO: Check to see if this correct.
 
-        _renderWindowHandle = IntPtr.Zero;
+        //SurfaceId = ID.INVALID_ID;
+
+        //_renderWindowHandle = IntPtr.Zero;
     }
 }

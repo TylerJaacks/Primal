@@ -1,7 +1,11 @@
-﻿using System;
+﻿// ReSharper disable InconsistentNaming
+// ReSharper disable CheckNamespace
+using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
+using PrimalEditor.Common;
 using PrimalEditor.Utilities.RenderSurface;
 
 namespace PrimalEditor.Utilities
@@ -17,6 +21,8 @@ namespace PrimalEditor.Utilities
         }
 
         private RenderSurfaceHost _host = null;
+        private bool _canResize = true;
+        private bool _moved = false;
 
         public RenderSurfaceView()
         {
@@ -34,6 +40,41 @@ namespace PrimalEditor.Utilities
             _host.MessageHook += new HwndSourceHook(HostMessageFilter);
 
             Content = _host;
+
+            var window = this.FindVisualParent<Window>();
+
+            Debug.Assert(window != null);
+
+            var helper = new WindowInteropHelper(window);
+
+            HwndSource.FromHwnd(helper.Handle)?.AddHook(HwndMessageHook);
+        }
+
+        private IntPtr HwndMessageHook(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam, ref bool handled)
+        {
+            switch ((Win32Msg)msg)
+            {
+                case Win32Msg.WM_SIZING:
+                    _canResize = false;
+                    _moved = false;
+                    break;
+                case Win32Msg.WM_ENTERSIZEMOVE:
+                    _moved = true;
+                    break;
+                case Win32Msg.WM_EXITSIZEMOVE:
+                    _canResize = true;
+
+                    if (!_moved)
+                    {
+                        _host.Resize();
+                    }
+
+                    break;
+                default:
+                    break;
+            }
+
+            return IntPtr.Zero;
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Local
@@ -41,12 +82,14 @@ namespace PrimalEditor.Utilities
         {
             switch ((Win32Msg) msg)
             {
-                case Win32Msg.WM_SIZING:
-                case Win32Msg.WM_ENTERSIZEMOVE:
-                case Win32Msg.WM_EXITSIZEMOVE:
-                    throw new Exception();
+                case Win32Msg.WM_SIZING: throw new Exception();
+                case Win32Msg.WM_ENTERSIZEMOVE: throw new Exception();
+                case Win32Msg.WM_EXITSIZEMOVE: throw new Exception();
                 case Win32Msg.WM_SIZE:
-                    _host.Resize();
+                    if (_canResize)
+                    {
+                        _host.Resize();
+                    }
                     break;
                 default:
                     break;

@@ -96,3 +96,10 @@ EDITOR_INTERFACE HWND GetWindowHandle(const u32 id)
 
 	return static_cast<HWND>(surfaces[id].window.handle());
 }
+
+EDITOR_INTERFACE void ResizeRenderSurface(const u32 id)
+{
+	assert(id < surfaces.size());
+
+	surfaces[id].window.resize(0, 0);
+}
