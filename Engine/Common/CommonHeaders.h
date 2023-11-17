@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <typeinfo>
+#include <string>
 #include <memory>
 
 #if defined(_WIN64)
