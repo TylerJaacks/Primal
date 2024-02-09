@@ -13,6 +13,8 @@
 #include <windows.h>
 #endif
 
+#include "PrimitiveTypes.h"
+#include "../Utilities/Math.h"
 #include "../Utilities/Utilities.h"
 #include "../Utilities/MathTypes.h"
 #include "PrimitiveTypes.h"
