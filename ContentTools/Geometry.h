@@ -1,8 +1,22 @@
 ﻿#pragma once
+
 #include "ToolsCommon.h"
 
 namespace primal::tools
 {
+	namespace packed_vertex
+	{
+		struct vertex_static
+		{
+			math::v3 position;
+			u8 reserved[3];
+			u8 t_sign;
+			u16 normal[2];
+			u16 tangent[2];
+			math::v2 uv;
+		};
+	}
+
 	struct vertex
 	{
 		math::v4 tangent{};
@@ -23,6 +37,11 @@ namespace primal::tools
 
 		utl::vector<vertex> vertices;
 		utl::vector<u32> indices;
+
+		std::string name;
+		utl::vector<packed_vertex::vertex_static> packed_vertices_static;
+		f32	lod_threshold{ -1.f };
+		u32 lod_id{ u32_invalid_id };
 	};
 
 	struct lod_group
