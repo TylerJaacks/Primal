@@ -109,6 +109,8 @@ namespace primal::tools
 
 			assert(m.raw_indices.size() == num_indices);
 
+			mesh.uv_sets.resize(1);
+
 			for (u32 i{0}; i < num_indices; ++i)
 			{
 				mesh.uv_sets[0].emplace_back(uvs[mesh.raw_indices[i]]);

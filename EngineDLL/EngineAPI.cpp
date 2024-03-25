@@ -7,10 +7,11 @@
 #include "../Engine/Platform/PlatformTypes.h"
 #include "../Engine/Graphics/Renderer.h"
 
-#ifndef WIN32_MEAN_AND_LEAN
-#define WIN32_MEAN_AND_LEAN
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
 
+#include <atlsafe.h>
 #include <Windows.h>
 
 using namespace primal;
