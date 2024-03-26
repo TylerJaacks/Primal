@@ -244,6 +244,8 @@ namespace primal::tools
 
 				size += lod_size;
 			}
+
+			return size;
 		}
 
 		void pack_mesh_data(const mesh& m, u8* const buffer, u64& at)

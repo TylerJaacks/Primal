@@ -1,38 +1,39 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Windows.Input;
 using System.Windows.Interop;
 
 namespace PrimalEditor.Utilities.RenderSurface;
 
-public class RenderSurfaceHost : HwndHost
+class RenderSurfaceHost : HwndHost
 {
     // ReSharper disable MemberInitializerValueIgnored
+    private readonly int VK_LBUTTON = 0x1;
     private readonly int _width = 800;
     private readonly int _height = 600;
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
 
     public static int SurfaceId { get; private set; } = ID.INVALID_ID;
     private IntPtr _renderWindowHandle = IntPtr.Zero;
 
     private readonly DelayEventTimer _resizeTimer;
 
-    public RenderSurfaceHost(int width, int height)
+    public RenderSurfaceHost(double width, double height)
     {
-        _width = width;
-        _height = height;
+        _width = (int) width;
+        _height = (int) height;
 
         _resizeTimer = new DelayEventTimer(TimeSpan.FromMilliseconds(250.0));
         _resizeTimer.Triggered += Resize;
+
+        SizeChanged += (s, e) => _resizeTimer.Trigger();
     }
 
-    public void Resize()
+    private void Resize(object sender, DelayEventTimerArgs e)
     {
-        _resizeTimer.Trigger();
-    }
-    private static void Resize(object sender, DelayEventTimerArgs e)
-    {
-        e.RepeatEvent = Mouse.LeftButton == MouseButtonState.Pressed;
+        e.RepeatEvent = GetAsyncKeyState(vKey: VK_LBUTTON) < 0;
 
         if (!e.RepeatEvent)
         {

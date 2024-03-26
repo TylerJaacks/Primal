@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-
+using PrimalEditor.Content;
 using PrimalEditor.GameDev;
 using PrimalEditor.Utilities.Controls;
 
@@ -33,6 +33,13 @@ namespace PrimalEditor.Editors
         private void BuildButton_OnClick(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void OnCreatePrimitiveMesh_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new PrimitiveMeshDialog();
+
+            dlg.ShowDialog();
         }
     }
 }
