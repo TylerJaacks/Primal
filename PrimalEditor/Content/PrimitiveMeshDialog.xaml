@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:PrimalEditor.Content"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:utl="clr-namespace:PrimalEditor.Utilities.Controls"
+        xmlns:ed="clr-namespace:PrimalEditor.Editors"
         mc:Ignorable="d"
         ResizeMode="NoResize"
         Foreground="{StaticResource Editor.FontBrush}"
@@ -13,6 +14,10 @@
         UseLayoutRounding="True"
         Title="Primitive Mesh" Height="600" Width="800"
         Style="{StaticResource PrimalDialogStyle}">
+    <Window.DataContext>
+        <ed:GeometryEditor/>
+    </Window.DataContext>
+    
     <Window.Resources>
         <ObjectDataProvider x:Key="dataFromEnum" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
             <ObjectDataProvider.MethodParameters>

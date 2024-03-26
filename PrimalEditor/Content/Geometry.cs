@@ -231,7 +231,9 @@ class Geometry : Asset
         }
         else
         {
-            meshName = $"mesh_{ContentHelper.GetRandomString()}";
+            // TODO: Fix this
+            //meshName = $"mesh_{ContentHelper.GetRandomString()}";
+            meshName = "Test";
         }
 
         var mesh = new Mesh();

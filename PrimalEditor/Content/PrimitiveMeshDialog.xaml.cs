@@ -1,10 +1,11 @@
-﻿
-using PrimalEditor.ContentToolsAPIStructs;
-using PrimalEditor.DLLWrappers;
-using PrimalEditor.Utilities.Controls;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+
+using PrimalEditor.ContentToolsAPIStructs;
+using PrimalEditor.DLLWrappers;
+using PrimalEditor.Editors;
+using PrimalEditor.Utilities.Controls;
 
 namespace PrimalEditor.Content
 {
@@ -68,6 +69,8 @@ namespace PrimalEditor.Content
             var geometry = new Geometry();
 
             ContentToolsAPI.CreatePrimitiveMesh(geometry, info);
+
+            (DataContext as GeometryEditor).SetAsset(geometry);
         }
     }
 }
