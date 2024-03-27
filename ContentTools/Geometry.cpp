@@ -11,7 +11,7 @@ namespace primal::tools
 		{
 			const u32 num_indices{ static_cast<u32>(m.raw_indices.size()) };
 
-			m.normals.reserve(num_indices);
+			m.normals.resize(num_indices);
 
 			for (u32 i{ 0 }; i < num_indices; ++i)
 			{

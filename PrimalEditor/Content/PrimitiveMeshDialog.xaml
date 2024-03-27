@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PrimalEditor.Content"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:utl="clr-namespace:PrimalEditor.Utilities.Controls"
-        xmlns:ed="clr-namespace:PrimalEditor.Editors"
+        xmlns:ed="clr-namespace:PrimalEditor.Editors" 
         mc:Ignorable="d"
         ResizeMode="NoResize"
         Foreground="{StaticResource Editor.FontBrush}"
@@ -96,6 +96,14 @@
                 </Grid>
 
                 <Button Content="Save" Width="96" Margin="5,0"/>
+            </StackPanel>
+
+            <ed:GeometryView DataContext="{Binding MeshRenderer}" Grid.Column="1"/>
+
+            <StackPanel Grid.Column="1" Margin="5" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" IsHitTestVisible="False">
+                <TextBlock Text="{Binding MeshRenderer.CameraPosition.X, StringFormat=G5}"/>
+                <TextBlock Text="{Binding MeshRenderer.CameraPosition.Y, StringFormat=G5}" Margin="10,0"/>
+                <TextBlock Text="{Binding MeshRenderer.CameraPosition.Z, StringFormat=G5}"/>
             </StackPanel>
         </Grid>
     </DockPanel>
