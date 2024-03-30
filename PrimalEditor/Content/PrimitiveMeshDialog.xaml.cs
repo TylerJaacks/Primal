@@ -1,76 +1,135 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using PrimalEditor.ContentToolsAPIStructs;
 using PrimalEditor.DLLWrappers;
 using PrimalEditor.Editors;
 using PrimalEditor.Utilities.Controls;
 
-namespace PrimalEditor.Content
+namespace PrimalEditor.Content;
+
+/// <summary>
+/// Interaction logic for PrimitiveMeshDialog.xaml
+/// </summary>
+public partial class PrimitiveMeshDialog : Window
 {
-    /// <summary>
-    /// Interaction logic for PrimitiveMeshDialog.xaml
-    /// </summary>
-    public partial class PrimitiveMeshDialog : Window
+    private static readonly List<ImageBrush> Textures = new();
+
+    public PrimitiveMeshDialog()
     {
-        public PrimitiveMeshDialog()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            Loaded += (s, e) => UpdatePrimitive();
+        Loaded += (s, e) => UpdatePrimitive();
+    }
+
+    static PrimitiveMeshDialog()
+    {
+        LoadTextures();
+    }
+
+    private void OnPrimitiveType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdatePrimitive();
+    private void OnScalarBox_ValueChanged(object sender, RoutedEventArgs e) => UpdatePrimitive();
+
+    private void OnSlider_ValueChanged(object sender, RoutedEventArgs e) => UpdatePrimitive();
+
+    private static float Value(NumberBox scalarBox, float min)
+    {
+        float.TryParse(scalarBox.Value, out var result);
+
+        return Math.Max(result, min);
+    }
+
+    private void UpdatePrimitive()
+    {
+        if (!IsInitialized) return;
+
+        var primitiveType = (PrimitiveMeshType) primTypeComboBox.SelectedItem;
+        var info = new PrimitiveInitInfo() { Type = primitiveType };
+
+        switch (primitiveType)
+        {
+            case PrimitiveMeshType.Plane:
+                {
+                    info.SegmentX = (int) xSliderPlane.Value;
+                    info.SegmentZ = (int) zSliderPlane.Value;
+
+                    info.Size.X = Value(widthScalarBoxPlane, 0.001f);
+                    info.Size.Z = Value(lengthScalarBoxPlane, 0.001f);
+
+                    break;
+                }
+            case PrimitiveMeshType.Cube:
+                return;
+            case PrimitiveMeshType.UvSphere:
+                return;
+            case PrimitiveMeshType.IcoSphere:
+                return;
+            case PrimitiveMeshType.Cylinder:
+                return;
+            case PrimitiveMeshType.Capsule:
+                return;
+            default:
+                break;
         }
 
-        private void OnPrimitiveType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdatePrimitive();
-        private void OnScalarBox_ValueChanged(object sender, RoutedEventArgs e) => UpdatePrimitive();
+        var geometry = new Geometry();
 
-        private void OnSlider_ValueChanged(object sender, RoutedEventArgs e) => UpdatePrimitive();
+        ContentToolsAPI.CreatePrimitiveMesh(geometry, info);
 
-        private float Value(ScalerBox scalarBox, float min)
+        (DataContext as GeometryEditor)?.SetAsset(geometry);
+
+        OnTexturedCheckBoxClick(texturedCheckBox, null);
+    }
+
+    private static void LoadTextures()
+    {
+        var uris = new List<Uri>
         {
-            float.TryParse(scalarBox.Value, out var result);
+            new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
+        };
 
-            return Math.Max(result, min);
-        }
+        Textures.Clear();
 
-        private void UpdatePrimitive()
+        foreach (var resource in uris.Select(Application.GetResourceStream))
         {
-            if (!IsInitialized) return;
+            using var reader = new BinaryReader(resource.Stream);
 
-            var primitiveType = (PrimitiveMeshType) primTypeComboBox.SelectedItem;
-            var info = new PrimitiveInitInfo() { Type = primitiveType };
+            var data = reader.ReadBytes((int)resource.Stream.Length);
 
-            switch (primitiveType)
+            var imageSource = (BitmapSource)new ImageSourceConverter().ConvertFrom(data);
+
+            imageSource?.Freeze();
+
+            var brush = new ImageBrush(imageSource)
             {
-                case PrimitiveMeshType.Plane:
-                    {
-                        info.SegmentX = (int) xSliderPlane.Value;
-                        info.SegmentZ = (int) zSliderPlane.Value;
+                Transform = new ScaleTransform(1, -1, 0.5, 0.5),
+                ViewportUnits = BrushMappingMode.Absolute
+            };
 
-                        info.Size.X = Value(widthScalarBoxPlane, 0.001f);
-                        info.Size.Z = Value(lengthScalarBoxPlane, 0.001f);
+            Textures.Add(brush);
+        }
+    }
 
-                        break;
-                    }
-                case PrimitiveMeshType.Cube:
-                    break;
-                case PrimitiveMeshType.UvSphere:
-                    break;
-                case PrimitiveMeshType.IcoSphere:
-                    break;
-                case PrimitiveMeshType.Cylinder:
-                    break;
-                case PrimitiveMeshType.Capsule:
-                    break;
-                default:
-                    break;
-            }
+    private void OnTexturedCheckBoxClick(object sender, RoutedEventArgs e)
+    {
+        Brush brush = Brushes.White;
 
-            var geometry = new Geometry();
+        if (sender is CheckBox { IsChecked: true })
+        {
+            brush = Textures[(int)primTypeComboBox.SelectedItem];
+        }
 
-            ContentToolsAPI.CreatePrimitiveMesh(geometry, info);
+        var vm = DataContext as GeometryEditor;
 
-            (DataContext as GeometryEditor).SetAsset(geometry);
+        foreach (var mesh in vm?.MeshRenderer.Meshes!)
+        {
+            mesh.Diffuse = brush;
         }
     }
 }

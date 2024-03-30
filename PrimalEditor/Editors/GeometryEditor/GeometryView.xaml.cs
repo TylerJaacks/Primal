@@ -1,4 +1,5 @@
-﻿using System;
+﻿// ReSharper disable CheckNamespace
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -110,22 +111,52 @@ public partial class GeometryView : UserControl
             var cameraPos = vm.CameraPosition;
             var yOffset = d.Y * 0.001 * Math.Sqrt(cameraPos.X * cameraPos.X + cameraPos.Z * cameraPos.Z);
 
-            vm.CameraTarget = new(vm.CameraTarget.X, vm.CameraTarget.Y + yOffset, vm.CameraTarget.Z);
+            vm.CameraTarget = new Point3D(vm.CameraTarget.X, vm.CameraTarget.Y + yOffset, vm.CameraTarget.Z);
         }
+
+        _clickedPosition = pos;
     }
 
     private void OnGridMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
     {
-
+        MoveCamera(0, 0, Math.Sign(e.Delta));
     }
 
     private void OnGridMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
+        _clickedPosition = e.GetPosition(this);
+        _capturedRight = true;
 
+        Mouse.Capture(sender as UIElement);
     }
 
     private void OnGridMouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
+        _capturedRight = false;
 
+        if (!_capturedLeft) Mouse.Capture(null);
+    }
+
+    private void MoveCamera(double dx, double dy, int dz)
+    {
+        var vm = DataContext as MeshRenderer;
+
+        var v = new Vector3D(vm.CameraPosition.X, vm.CameraPosition.Y, vm.CameraPosition.Z);
+
+        var r = v.Length;
+        var theta = Math.Acos(v.Y / r);
+        var phi = Math.Atan2(-v.Z, v.X);
+
+        theta -= dy * 0.01;
+        phi -= dx * 0.01;
+        r *= 1.0 - 0.1 * dz;
+
+        theta = Math.Clamp(theta, 0.0001, Math.PI - 0.0001);
+
+        v.X = r * Math.Sin(theta) * Math.Cos(phi);
+        v.Z = -r * Math.Sin(theta) * Math.Sin(phi);
+        v.Y = r * Math.Cos(theta);
+
+        vm.CameraPosition = new Point3D(v.X, v.Y, v.Z);
     }
 }

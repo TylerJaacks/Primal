@@ -67,7 +67,7 @@ namespace primal::tools
 					mesh.positions.emplace_back(position.x * info.size.x, position.y * info.size.y, position.z * info.size.z);
 
 					math::v2 uv{ u_range.x, 1.0f - v_range.x };
-
+					
 					uv.x += i * u_step;
 					uv.y -= j * v_step;
 
