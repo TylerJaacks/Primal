@@ -67,7 +67,16 @@ public partial class PrimitiveMeshDialog : Window
             case PrimitiveMeshType.Cube:
                 return;
             case PrimitiveMeshType.UvSphere:
-                return;
+                {
+                    info.SegmentX = (int)xSliderUvSphere.Value;
+                    info.SegmentY = (int)ySliderUvSphere.Value;
+
+                    info.Size.X = Value(xScalarBoxUvSphere, 0.001f);
+                    info.Size.Z = Value(yScalarBoxUvSphere, 0.001f);
+                    info.Size.Z = Value(zScalarBoxUvSphere, 0.001f);
+
+                    break;
+                }
             case PrimitiveMeshType.IcoSphere:
                 return;
             case PrimitiveMeshType.Cylinder:
@@ -84,13 +93,16 @@ public partial class PrimitiveMeshDialog : Window
 
         (DataContext as GeometryEditor)?.SetAsset(geometry);
 
-        OnTexturedCheckBoxClick(texturedCheckBox, null);
+        OnTexturedCheckBoxClick(textureCheckBox, null);
     }
 
     private static void LoadTextures()
     {
         var uris = new List<Uri>
         {
+            new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
+            new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
+            new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
             new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
         };
 

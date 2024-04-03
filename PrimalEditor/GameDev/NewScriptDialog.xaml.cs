@@ -101,7 +101,7 @@ namespace {1} {{
                 isValid = true;
 
             if (!isValid)
-                MessageTextBlock.Foreground = FindResource("Editor.Window.RedBrush") as Brush;
+                MessageTextBlock.Foreground = FindResource("Editor.RedBrush") as Brush;
             else
                 MessageTextBlock.Foreground = FindResource("Editor.FontBrush") as Brush;
 

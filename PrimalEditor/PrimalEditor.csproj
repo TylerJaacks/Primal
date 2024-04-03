@@ -4,7 +4,8 @@
 	<OutputType>WinExe</OutputType>
 	<TargetFramework>net7.0-windows</TargetFramework>
 	<UseWPF>true</UseWPF>
-	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	  <XamlDebuggingInformation>True</XamlDebuggingInformation>
+	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	<PlatformTarget>x64</PlatformTarget>
 	<Platforms>x64</Platforms>
 	<Configurations>DebugEditor;ReleaseEditor</Configurations>

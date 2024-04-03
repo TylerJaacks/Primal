@@ -16,7 +16,7 @@
         </Border.Effect>
 
         <Grid Margin="32,0">
-            <TextBlock VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="{StaticResource Editor.Window.RedBrush}" Margin="0, 10,0,0" TextWrapping="Wrap" x:Name="MessageTextBlock"></TextBlock>
+            <TextBlock VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="{StaticResource Editor.RedBrush}" Margin="0, 10,0,0" TextWrapping="Wrap" x:Name="MessageTextBlock"></TextBlock>
 
             <DockPanel>
                 <TextBlock Text="Engine path" Width="72" Style="{StaticResource LightTextBlockStyle}"/>

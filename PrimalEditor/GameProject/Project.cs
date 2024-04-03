@@ -115,18 +115,12 @@ namespace PrimalEditor.GameProject
         public ICommand DebugStartWithoutDebuggingCommand { get; private set; }
         public ICommand DebugStopCommand { get; private set; }
 
-
         public Project(string name, string path)
         {
             Name = name;
             Path = path;
 
             OnDeserialized(new StreamingContext());
-        }
-
-        public Project()
-        {
-
         }
 
         [OnDeserialized]

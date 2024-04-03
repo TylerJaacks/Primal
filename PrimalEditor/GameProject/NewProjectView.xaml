@@ -51,7 +51,7 @@
                     Click="OnCreate_Button_Click"/>
                 <Button Content="Exit" Width="96" Margin="30,0,0,0" IsCancel="True"/>
             </StackPanel>
-            <TextBlock Text="{Binding ErrorMsg}" Foreground="{StaticResource Editor.Window.RedBrush}" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding ErrorMsg}" Foreground="{StaticResource Editor.RedBrush}" Margin="0,10,0,0" HorizontalAlignment="Center"/>
         </StackPanel>
     </Border>
 </UserControl>

@@ -94,11 +94,11 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="4,0" VerticalAlignment="Center">
                 <Button Content="Clear" Margin="1,0" Click="OnClear_Button_Click" Focusable="False"/>
                 <ToggleButton IsChecked="True" Content="info" Margin="1,0" ToolTip="Toggle information messages"
-                              x:Name="toggleInfo" Background="{StaticResource Editor.Window.GreenBrush}"/>
+                              x:Name="toggleInfo" Background="{StaticResource Editor.GreenBrush}"/>
                 <ToggleButton IsChecked="True" Content="warn" Margin="1,0" ToolTip="Toggle warning messages"
-                              x:Name="toggleWarnings" Background="{StaticResource Editor.Window.OrangeBrush}"/>
+                              x:Name="toggleWarnings" Background="{StaticResource Editor.OrangeBrush}"/>
                 <ToggleButton IsChecked="True" Content="error" Margin="1,0" ToolTip="Toggle error messages"
-                              x:Name="toggleErrors" Background="{StaticResource Editor.Window.RedBrush}"/>
+                              x:Name="toggleErrors" Background="{StaticResource Editor.RedBrush}"/>
             </StackPanel>
         </Border>
     </Grid>
