@@ -6,11 +6,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Documents;
 
 namespace PrimalEditor.Content;
 
-enum PrimitiveMeshType
+public enum PrimitiveMeshType
 {
     Plane,
     Cube,
@@ -20,7 +19,7 @@ enum PrimitiveMeshType
     Capsule
 };
 
-class Mesh : ViewModelBase
+public class Mesh : ViewModelBase
 {
     private int _vertexSize;
 
@@ -90,7 +89,7 @@ class Mesh : ViewModelBase
     public byte[] Indices { get; set; }
 }
 
-class MeshLOD : ViewModelBase
+public class MeshLOD : ViewModelBase
 {
     private string _name;
 
@@ -127,7 +126,7 @@ class MeshLOD : ViewModelBase
     public ObservableCollection<Mesh> Meshes { get; } = new ObservableCollection<Mesh>();
 }
 
-class LODGroup : ViewModelBase
+public class LODGroup : ViewModelBase
 {
     private string _name;
 
@@ -148,9 +147,120 @@ class LODGroup : ViewModelBase
     public ObservableCollection<MeshLOD> LODs { get; } = new ObservableCollection<MeshLOD>();
 }
 
-class Geometry : Asset
+public class GeometryImportSettings : ViewModelBase
+{
+    private float _smoothingAngle;
+
+    public float SmoothingAngle
+    {
+        get => _smoothingAngle;
+        set
+        {
+            if (_smoothingAngle != value)
+            {
+                _smoothingAngle = value;
+
+                OnPropertyChanged(nameof(SmoothingAngle));
+            }
+        }
+    }
+
+    private bool _calculateNormals;
+
+    public bool CalculateNormals
+    {
+        get => _calculateNormals;
+        set
+        {
+            if (_calculateNormals != value)
+            {
+                _calculateNormals = value;
+
+                OnPropertyChanged(nameof(CalculateNormals));
+            }
+        }
+    }
+
+    private bool _calculateTangents;
+
+    public bool CalculateTangents
+    {
+        get => _calculateTangents;
+        set
+        {
+            if (_calculateTangents != value)
+            {
+                _calculateTangents = value;
+
+                OnPropertyChanged(nameof(CalculateTangents));
+            }
+        }
+    }
+
+    private bool _reverseHandednesss;
+
+    public bool ReverseHandedness
+    {
+        get => _reverseHandednesss;
+        set
+        {
+            if (_reverseHandednesss != value)
+            {
+                _reverseHandednesss = value;
+
+                OnPropertyChanged(nameof(ReverseHandedness));
+            }
+        }
+    }
+
+    private bool _importEmbeddedTextures;
+
+    public bool ImportEmbeddedTextures
+    {
+        get => _importEmbeddedTextures;
+        set
+        {
+            if (_importEmbeddedTextures != value)
+            {
+                _importEmbeddedTextures = value;
+
+                OnPropertyChanged(nameof(ImportEmbeddedTextures));
+            }
+        }
+    }
+
+    private bool _importAnimation;
+
+    public bool ImportAnimation
+    {
+        get => _importAnimation;
+        set
+        {
+            if (_importAnimation != value)
+            {
+                _importAnimation = value;
+
+                OnPropertyChanged(nameof(ImportAnimation));
+            }
+        }
+    }
+
+    public GeometryImportSettings()
+    {
+        CalculateNormals = false;
+        CalculateTangents = false;
+        SmoothingAngle = 178f;
+        ReverseHandedness = false;
+        ImportEmbeddedTextures = true;
+        ImportAnimation = true;
+    }
+}
+
+public class Geometry : Asset
 {
     private readonly List<LODGroup> _lodGroup = new();
+
+    public GeometryImportSettings ImportSettings { get; } = new GeometryImportSettings();
 
     public LODGroup GetLODGroup(int lodGroup = 0)
     {

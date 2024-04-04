@@ -51,6 +51,7 @@ public partial class PrimitiveMeshDialog : Window
 
         var primitiveType = (PrimitiveMeshType) primTypeComboBox.SelectedItem;
         var info = new PrimitiveInitInfo() { Type = primitiveType };
+        var smoothingAngle = 0;
 
         switch (primitiveType)
         {
@@ -75,6 +76,8 @@ public partial class PrimitiveMeshDialog : Window
                     info.Size.Z = Value(yScalarBoxUvSphere, 0.001f);
                     info.Size.Z = Value(zScalarBoxUvSphere, 0.001f);
 
+                    smoothingAngle = (int)angleSliderUvSphere.Value;
+
                     break;
                 }
             case PrimitiveMeshType.IcoSphere:
@@ -89,6 +92,8 @@ public partial class PrimitiveMeshDialog : Window
 
         var geometry = new Geometry();
 
+        geometry.ImportSettings.SmoothingAngle = smoothingAngle;
+
         ContentToolsAPI.CreatePrimitiveMesh(geometry, info);
 
         (DataContext as GeometryEditor)?.SetAsset(geometry);
@@ -102,8 +107,7 @@ public partial class PrimitiveMeshDialog : Window
         {
             new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
             new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
-            new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
-            new("pack://application:,,,/Resources/PrimitiveMeshView/PlaneTexture.png"),
+            new("pack://application:,,,/Resources/PrimitiveMeshView/Checkermap.png"),
         };
 
         Textures.Clear();

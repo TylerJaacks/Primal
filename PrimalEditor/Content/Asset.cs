@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace PrimalEditor.Content;
 
-enum AssetType
+public enum AssetType
 {
     Unknown,
     Animation,
@@ -14,7 +14,7 @@ enum AssetType
     Texture,
 }
 
-abstract class Asset : ViewModelBase
+public abstract class Asset : ViewModelBase
 {
     public AssetType Type { get; set; }
 
