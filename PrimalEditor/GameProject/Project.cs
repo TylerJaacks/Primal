@@ -36,6 +36,8 @@ namespace PrimalEditor.GameProject
 
         public string Solution => $@"{Path}{Name}.sln";
 
+        public string Content => $@"{Path}Content";
+
         private static readonly string[] BuildConfigurationNames =
             { "Debug", "DebugEditor", "Release", "ReleaseEditor" };
 
