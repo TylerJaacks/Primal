@@ -1,6 +1,6 @@
 #pragma once
 
-namespace primial::graphics
+namespace primal::graphics 
 {
 	struct platform_interface;
 
