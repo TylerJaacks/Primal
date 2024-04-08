@@ -7,6 +7,7 @@
 #include <typeinfo>
 #include <string>
 #include <memory>
+#include <mutex>
 
 #if defined(_WIN64)
 #include <DirectXMath.h>

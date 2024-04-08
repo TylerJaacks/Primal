@@ -338,4 +338,9 @@ namespace primal::graphics::d3d12::core
 
 		gfx_command.end_frame();
 	}
+
+	ID3D12Device* const device()
+	{
+		return main_device;
+	}
 }
