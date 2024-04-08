@@ -7,7 +7,8 @@ namespace primal::graphics
 {
 	struct platform_interface
 	{
-		bool (*initialize) (void);
-		void (*shutdown) (void);
+		bool (*initialize)	(void);
+		void (*shutdown)	(void);
+		void (*render)		(void);
 	};
 }

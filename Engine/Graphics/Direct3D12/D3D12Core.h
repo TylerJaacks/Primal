@@ -3,6 +3,7 @@
 
 namespace primal::graphics::d3d12::core {
 	bool initialize();
+	void render();
 	void shutdown();
 
 	template<typename T> constexpr void release(T*& resource)
