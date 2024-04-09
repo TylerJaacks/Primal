@@ -1,7 +1,6 @@
 #pragma once
 #include "../Common/CommonHeaders.h"
 
-
 namespace primal::platform
 {
 	DEFINE_TYPED_ID(window_id);
@@ -10,7 +9,7 @@ namespace primal::platform
 	{
 	public:
 		constexpr explicit window(const window_id id) : id_{ id } {}
-		constexpr window() : id_{ id::invalid_id } {}
+		constexpr window() = default;
 		[[nodiscard]] constexpr window_id get_id() const { return id_; }
 		[[nodiscard]] constexpr bool is_valid() const { return id::is_valid(id_); }
 
