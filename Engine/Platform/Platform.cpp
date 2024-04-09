@@ -15,42 +15,11 @@ namespace primal::platform
 			DWORD style{ WS_VISIBLE };
 			bool is_fullscreen{ false };
 			bool is_closed{ false };
+
+			~window_info() { assert(!is_fullscreen); }
 		};
 
-		utl::vector<window_info> windows;
-
-		utl::vector<u32> available_slots;
-
-		u32 add_to_windows(window_info info)
-		{
-			u32 id{ u32_invalid_id };
-
-			if (available_slots.empty())
-			{
-				id = static_cast<id::id_type>(windows.size());
-
-				windows.emplace_back(info);
-			}
-			else
-			{
-				id = available_slots.back();
-
-				available_slots.pop_back();
-
-				assert(id != u32_invalid_id);
-
-				windows[id] = info;
-			}
-
-			return id;
-		}
-
-		void remove_from_windows(u32 id)
-		{
-			assert(id < windows.size());
-
-			available_slots.emplace_back(id);
-		}
+		utl::free_list<window_info> windows;
 
 		window_info& get_from_id(const window_id id)
 		{
@@ -67,7 +36,6 @@ namespace primal::platform
 			return get_from_id(id);
 		}
 
-		// ReSharper disable CppParameterMayBeConst
 		LRESULT CALLBACK internal_window_proc(const HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			window_info* info{ nullptr };
@@ -170,7 +138,7 @@ namespace primal::platform
 		{
 			DEBUG_OP(SetLastError(0));
 
-			const window_id id{ add_to_windows(info) };
+			const window_id id{ windows.add(info) };
 
 			SetWindowLongPtr(info.hwnd, GWLP_USERDATA, (LONG_PTR) id);
 
@@ -189,12 +157,11 @@ namespace primal::platform
 
 	void remove_window(const window_id id)
 	{
-		// ReSharper disable once CppUseStructuredBinding
 		const window_info& info{ get_from_id(id) };
 
 		DestroyWindow(info.hwnd);
 
-		remove_from_windows(id);
+		windows.remove(id);
 	}
 
 	void resize_window(const window_info& info, const RECT& area)
@@ -292,6 +259,7 @@ namespace primal::platform
 	{
 		return get_from_id(id).is_closed;
 	}
+
 #elif 
 #else
 #error "must implement at least one platform."

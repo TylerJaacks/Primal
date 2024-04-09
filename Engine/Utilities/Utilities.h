@@ -2,6 +2,7 @@
 
 #define USE_STL_VECTOR 1
 #define USE_STL_DEQUE 1
+
 #include <algorithm>
 
 #if USE_STL_VECTOR
@@ -37,10 +38,10 @@ namespace primal::utl
 }
 #endif
 
-
 namespace primal::utl
 {
 
 	// TODO: implement our own containers
-
 }
+
+#include "FreeList.h"

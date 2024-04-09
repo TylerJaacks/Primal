@@ -30,15 +30,15 @@
 #define DISABLE_COPY_AND_MOVE(T) DISABLE_COPY(T) DISABLE_MOVE(T)
 #endif
 
+#ifdef _DEBUG
+#define DEBUG_OP(x) x
+#else
+#define DEBUG_OP(x) (void(0))
+#endif
+
 #include "PrimitiveTypes.h"
 #include "../Utilities/Math.h"
 #include "../Utilities/Utilities.h"
 #include "../Utilities/MathTypes.h"
 #include "PrimitiveTypes.h"
 #include "../Common/Id.h"
-
-#ifdef _DEBUG
-#define DEBUG_OP(x) x
-#else
-#define DEBUG_OP(x) (void(0))
-#endif
