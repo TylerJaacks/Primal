@@ -15,13 +15,11 @@ namespace primal::platform
 			DWORD style{ WS_VISIBLE };
 			bool is_fullscreen{ false };
 			bool is_closed{ false };
-
-			~window_info() { assert(!is_fullscreen); }
 		};
 
 		utl::free_list<window_info> windows;
 
-		window_info& get_from_id(const window_id id)
+		window_info& get_from_id(window_id id)
 		{
 			assert(id < windows.size());
 			assert(windows[id].hwnd);
@@ -71,10 +69,10 @@ namespace primal::platform
 				GetClientRect(info->hwnd, info->is_fullscreen ? &info->fullscreen_area : &info->client_area);
 			}
 
-			const LONG_PTR long_ptr{ GetWindowLongPtr(hwnd, 0) };
+			LONG_PTR long_ptr{ GetWindowLongPtr(hwnd, 0) };
 
 			return long_ptr
-				? reinterpret_cast<window_proc>(long_ptr)(hwnd, msg, wparam, lparam)  // NOLINT(performance-no-int-to-ptr)
+				? ((window_proc)long_ptr)(hwnd, msg, wparam, lparam)
 				: DefWindowProc(hwnd, msg, wparam, lparam);
 		}
 	}
@@ -255,7 +253,7 @@ namespace primal::platform
 		}
 	}
 
-	bool is_window_closed(const window_id id)
+	bool is_window_closed(window_id id)
 	{
 		return get_from_id(id).is_closed;
 	}

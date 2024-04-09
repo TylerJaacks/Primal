@@ -1,11 +1,12 @@
 #pragma once
 #include "CommonHeaders.h"
 
-namespace primal::utl 
+namespace primal::utl
 {
 	template<typename T, bool destruct = true>
 	class vector
 	{
+	public:
 		vector() = default;
 
 		constexpr explicit vector(u64 count)
@@ -23,9 +24,18 @@ namespace primal::utl
 			*this = o;
 		}
 
-		constexpr vector(const  vector&& o) : _capacity{o._capacity}, _size{o._size}, _data{o._data}
+		constexpr vector(const  vector&& o) : _capacity{ o._capacity }, _size{ o._size }, _data{ o._data }
 		{
 			o.reset();
+		}
+
+		template<typename it, typename = std::enable_if<std::_Is_iterator_v<it>>>
+		constexpr explicit vector(it first, it last)
+		{
+			for (; first != last; ++first)
+			{
+				emplace_back(*first);
+			}
 		}
 
 		constexpr vector& operator=(const vector& o)
@@ -72,9 +82,253 @@ namespace primal::utl
 			_size = 0;
 		}
 
+		constexpr T *const erase_unordered(u64 index)
+		{
+			assert(_data && index < _size);
+
+			return erase_unordered(std::addressof(_data[index]));
+		}
+
+		constexpr T *const erase_unordered(T* const item)
+		{
+			assert(_data && item >= std::addressof(_data[0]) && item < std::addressof(_data[_size]));
+
+			if constexpr (destruct) item->~T();
+
+			--_size;
+
+			if (item < std::addressof(_data[_size]))
+			{
+				memcpy(item, std::addressof(_data[_size]), sizeof(T));
+			}
+
+			return item;
+		}
+
+		constexpr T *const erase(u64 index)
+		{
+			assert(_data && index < _size);
+
+			return erase(std::addressof(_data[index]));
+		}
+
+		constexpr T *const erase(T *const item)
+		{
+			assert(_data && item >= std::addressof(_data[0]) && item < std::addressof(_data[_size]));
+
+			if constexpr (destruct) item->~T();
+
+			--size;
+
+			if (item < std::addressof(_data[_size]))
+			{
+				memcpy(item, item + 1, (std::addressof(_data[_size]) - 1) * sizeof(T));
+			}
+
+			return item;
+		}
+
+		constexpr void swap(vector& o)
+		{
+			if (this != std::addressof(o))
+			{
+				auto temp(o);
+
+				o = *this;
+
+				*this = temp;
+			}
+		}
+
+		[[nodiscard]] constexpr T* data()
+		{
+			return _data;
+		}
+
+		[[nodiscard]] constexpr T *const data() const
+		{
+			return _data;
+		}
+
+		[[nodiscard]] constexpr bool empty() const
+		{
+			return _size == 0;
+		}
+
+		[[nodiscard]] constexpr u64 size() const
+		{
+			return _size;
+		}
+
+		[[nodiscard]] constexpr u64 capacity() const
+		{
+			return _capacity;
+		}
+
+		[[nodiscard]] constexpr T& operator[](u64 index)
+		{
+			assert(_data && index < _size);
+
+			return _data[index];
+		}
+
+		[[nodiscard]] constexpr T& front()
+		{
+			assert(_data && _size);
+
+			return _data[0];
+		}
+
+		[[nodiscard]] constexpr const T& front() const
+		{
+			assert(_data && _size);
+
+			return _data[0];
+		}
+
+		[[nodiscard]] constexpr T& back()
+		{
+			assert(_data && _size);
+
+			return _data[_size - 1];
+		}
+
+		[[nodiscard]] constexpr const T& back() const
+		{
+			assert(_data && _size);
+
+			return _data[_size - 1];
+		}
+
+		[[nodiscard]] constexpr const T& operator[](u64 index) const
+		{
+			assert(_data && index < _size);
+
+			return _data[index];
+		}
+
+		[[nodiscard]] constexpr T* begin()
+		{
+			assert(_data);
+
+			return  std::addressof(_data[0]);
+		}
+
+		[[nodiscard]] constexpr const T* begin() const
+		{
+			assert(_data);
+
+			return  std::addressof(_data[0]);
+		}
+
+		[[nodiscard]] constexpr T* end()
+		{
+			assert(_data);
+
+			return  std::addressof(_data[_size]);
+		}
+
+		[[nodiscard]] constexpr const T* end() const
+		{
+			assert(_data);
+
+			return std::addressof(_data[_size]);
+		}
+
 		~vector()
 		{
 			destroy();
+		}
+
+		constexpr void push_back(const T& value)
+		{
+			emplace_back(value);
+		}
+
+		constexpr void push_back(T&& value)
+		{
+			emplace_back(std::move(value));
+		}
+
+		template<typename...params>
+		constexpr decltype(auto) emplace_back(params&&... p)
+		{
+			if (_size == _capacity)
+			{
+				reserve(((_capacity + 1) * 3) >> 1);
+			}
+
+			assert(_size < _capacity);
+
+			new (std::addressof(_data[_size])) T(std::forward<params>(p)...);
+
+			++_size;
+
+			return _data[_size - 1];
+		}
+
+		constexpr void resize(u64 new_size)
+		{
+			static_assert(std::is_default_constructible_v<T>, "Type must be default-constructible");
+
+			if (new_size > _size)
+			{
+				reserve(new_size);
+
+				while (_size < new_size)
+				{
+					emplace_back();
+				}
+			}
+			else if (new_size < _size)
+			{
+				if constexpr (destruct)
+				{
+					destruct_range(new_size, _size);
+				}
+			}
+
+			assert(new_size == _size);
+		}
+
+		constexpr void resize(u64 new_size, const T& value)
+		{
+			static_assert(std::is_copy_constructible_v<T>, "Type must be copy-constructible");
+
+			if (new_size > _size)
+			{
+				reserve(new_size);
+
+				while (_size < new_size)
+				{
+					emplace_back(value);
+				}
+			}
+			else if (new_size < _size)
+			{
+				if constexpr (destruct)
+				{
+					destruct_range(new_size, _size);
+				}
+			}
+
+			assert(new_size == _size);
+		}
+
+		constexpr void reserve(u64 new_capacity)
+		{
+			if (new_capacity > _capacity)
+			{
+				void* new_buffer{ realloc(_data, new_capacity * sizeof(T)) };
+
+				assert(new_buffer);
+
+				if (new_buffer)
+				{
+					_data = static_cast<T*>(new_buffer);
+					_capacity = new_capacity;
+				}
+			}
 		}
 	private:
 		constexpr void move(vector& o)
@@ -82,15 +336,15 @@ namespace primal::utl
 			_capacity = o._capacity;
 			_size = o._size;
 			_data = o._data;
-			
+
 			o.reset();
 		}
 
 		constexpr void reset()
 		{
-			_capacity	= 0;
-			_size		= 0;
-			_data		= nullptr;
+			_capacity = 0;
+			_size = 0;
+			_data = nullptr;
 		}
 
 		constexpr void destruct_range(u64 first, u64 last)
