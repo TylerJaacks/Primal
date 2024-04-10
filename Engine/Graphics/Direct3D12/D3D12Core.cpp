@@ -6,6 +6,8 @@ using namespace Microsoft::WRL;
 
 namespace primal::graphics::d3d12::core 
 {
+	void create_root_signature();
+
 	namespace 
 	{
 		class d3d12_command
@@ -319,12 +321,24 @@ namespace primal::graphics::d3d12::core
 		DXCall(hr = D3D12CreateDevice(main_adapter.Get(), max_feature_level, IID_PPV_ARGS(&main_device)));
 		if (FAILED(hr)) return failed_init();
 
+#ifdef _DEBUG
+		{
+			ComPtr<ID3D12InfoQueue> info_queue;
+
+			DXCall(main_device->QueryInterface(IID_PPV_ARGS(&info_queue)));
+
+			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+		}
+#endif 
+
 		bool result{ true };
 
-		result &= rtv_desc_heap.initialize(512,  false);
-		result &= dsv_desc_heap.initialize(512,  false);
+		result &= rtv_desc_heap.initialize(512, false);
+		result &= dsv_desc_heap.initialize(512, false);
 		result &= srv_desc_heap.initialize(4096, true);
-		result &= uav_desc_heap.initialize(512,  false);
+		result &= uav_desc_heap.initialize(512, false);
 
 		if (!result) return failed_init();
 
@@ -337,17 +351,7 @@ namespace primal::graphics::d3d12::core
 		NAME_D3D12_OBJECT(srv_desc_heap.heap(), L"SRV Heap Descriptor");
 		NAME_D3D12_OBJECT(uav_desc_heap.heap(), L"UAV Heap Descriptor");
 
-#ifdef _DEBUG
-		{
-			ComPtr<ID3D12InfoQueue> info_queue;
-
-			DXCall(main_device->QueryInterface(IID_PPV_ARGS(&info_queue)));
-
-			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-		}
-#endif 
+		create_root_signature();
 
 		return true;
 	}
@@ -462,5 +466,110 @@ namespace primal::graphics::d3d12::core
 		surface.present();
 
 		gfx_command.end_frame();
+	}
+
+	void create_root_signature()
+	{
+		D3D12_ROOT_PARAMETER1 params[3];
+
+		// param0: 2 Constant(s)
+		{
+			auto& param = params[0];
+
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			
+			D3D12_ROOT_CONSTANTS consts{};
+
+			consts.Num32BitValues	= 2;
+			consts.ShaderRegister	= 0;
+			consts.RegisterSpace	= 0;
+
+			param.Constants				= consts;
+			param.ShaderVisibility		= D3D12_SHADER_VISIBILITY_PIXEL;
+		}
+
+		// param1: 1 Constant Buffer View (Descriptor)
+		{
+			auto& param = params[1];
+
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+
+			D3D12_ROOT_DESCRIPTOR1 root_desc{};
+
+			root_desc.Flags				= D3D12_ROOT_DESCRIPTOR_FLAG_NONE;
+			root_desc.RegisterSpace		= 0;
+			root_desc.ShaderRegister	= 0;
+
+			param.Descriptor			= root_desc;
+			param.ShaderVisibility		= D3D12_SHADER_VISIBILITY_PIXEL;
+		}
+
+		// param2: 1 Descriptor Table (Unbounded/Bindless)
+		{
+			auto& param = params[2];
+
+			D3D12_ROOT_DESCRIPTOR_TABLE1 table{};
+			D3D12_DESCRIPTOR_RANGE1 range{};
+
+			range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			range.NumDescriptors = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
+			range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			range.BaseShaderRegister = 0;
+			range.RegisterSpace = 0;
+		
+			table.NumDescriptorRanges = 1;
+			table.pDescriptorRanges = &range;
+
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			param.DescriptorTable = table;
+			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		}
+
+		D3D12_STATIC_SAMPLER_DESC sampler_desc{};
+		D3D12_ROOT_SIGNATURE_DESC1 desc{};
+		D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc{};
+
+		sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler_desc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		desc.Flags =
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
+			D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
+		desc.NumParameters = _countof(params);
+		desc.pParameters = &params[0];
+		desc.NumStaticSamplers = 1;
+		desc.pStaticSamplers = &sampler_desc;
+
+		rs_desc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
+		rs_desc.Desc_1_1 = desc;
+
+		HRESULT hr{ S_OK };
+
+		ID3DBlob* root_signature_blob{ nullptr };
+		ID3DBlob* error_blob{ nullptr };
+
+		if (FAILED(hr = D3D12SerializeVersionedRootSignature(&rs_desc, &root_signature_blob, &error_blob)))
+		{
+			DEBUG_OP(const char* error_msg{ error_blob ? (const char*)error_blob->GetBufferPointer() : "" });
+			DEBUG_OP(OutputDebugStringA(error_msg));
+
+			return;
+		}
+
+		assert(root_signature_blob);
+
+		ID3D12RootSignature* root_signature{ nullptr };
+
+		DXCall(hr = device()->CreateRootSignature(0, root_signature_blob->GetBufferPointer(), root_signature_blob->GetBufferSize(), IID_PPV_ARGS(&root_signature)));
+
+
+		release(root_signature_blob);
+		release(error_blob);
 	}
 }

@@ -4,12 +4,13 @@
 
 namespace primal::graphics::d3d12 
 {
+#pragma region descriptor_heap
 	bool descriptor_heap::initialize(u32 capacity, bool is_shader_visible)
 	{
 		std::lock_guard lock{ _mutex };
-		
+
 		assert(capacity && capacity < D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_2);
-		assert(!(_type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER && 
+		assert(!(_type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER &&
 			capacity > D3D12_MAX_SHADER_VISIBLE_SAMPLER_HEAP_SIZE));
 
 		if (_type == D3D12_DESCRIPTOR_HEAP_TYPE_DSV || _type == D3D12_DESCRIPTOR_HEAP_TYPE_RTV)
@@ -62,7 +63,7 @@ namespace primal::graphics::d3d12
 
 		assert(frame_index < frame_buffer_count);
 
-		utl::vector<u32>& indices{_deferred_free_indices[frame_index]};
+		utl::vector<u32>& indices{ _deferred_free_indices[frame_index] };
 
 		if (!indices.empty())
 		{
@@ -114,12 +115,12 @@ namespace primal::graphics::d3d12
 		assert(handle.cpu.ptr >= _cpu_start.ptr);
 		assert((handle.cpu.ptr - _cpu_start.ptr) % _descriptor_size == 0);
 		assert(handle.index < _capacity);
-		
+
 		const u32 index{ (u32)(handle.cpu.ptr - _cpu_start.ptr) / _descriptor_size };
 
 		assert(handle.index == index);
 
-		const u32 frame_index{core::current_frame_index()};
+		const u32 frame_index{ core::current_frame_index() };
 
 		_deferred_free_indices[frame_index].push_back(index);
 
@@ -127,9 +128,9 @@ namespace primal::graphics::d3d12
 
 		handle = {};
 	}
+#pragma endregion
 
-
-
+#pragma region d3d12_texture
 	d3d12_texture::d3d12_texture(d3d12_texture_init_info info)
 	{
 		auto *const device{ core::device() };
@@ -187,9 +188,9 @@ namespace primal::graphics::d3d12
 		core::dsv_heap().free(_srv);
 		core::deferred_release(_resource);
 	}
+#pragma endregion
 
-
-
+#pragma region d3d12_render_texture
 	d3d12_render_texture::d3d12_render_texture(d3d12_texture_init_info info) : _texture{ info }
 	{
 		assert(info.desc);
@@ -228,9 +229,9 @@ namespace primal::graphics::d3d12
 
 		_mip_count = 0;
 	}
+#pragma endregion
 
-
-
+#pragma region d3d12_depth_buffer
 	d3d12_depth_buffer::d3d12_depth_buffer(d3d12_texture_init_info info)
 	{
 		assert(info.desc);
@@ -279,4 +280,5 @@ namespace primal::graphics::d3d12
 
 		_texture.release();
 	}
+#pragma endregion0
 }
