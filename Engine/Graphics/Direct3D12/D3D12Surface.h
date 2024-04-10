@@ -7,6 +7,8 @@ namespace primal::graphics::d3d12
 	class d3d12_surface
 	{
 	public:
+		constexpr static u32 buffer_count{ 3 };
+
 		explicit d3d12_surface(platform::window window) : _window{ window }
 		{
 			assert(_window.handle());
@@ -17,7 +19,7 @@ namespace primal::graphics::d3d12
 
 		constexpr d3d12_surface(d3d12_surface&& o) : _swap_chain{ o._swap_chain }, _window{ o._window }, _current_bb_index{ o._current_bb_index }, _allow_tearing{ o._allow_tearing }, _present_flags{ o._present_flags }, _viewport{ o._viewport }, _scissor_rect{ o._scissor_rect }
 		{
-			for (u32 i{ 0 }; i < frame_buffer_count; ++i)
+			for (u32 i{ 0 }; i < buffer_count; ++i)
 			{
 				_render_target_data[i].resource = o._render_target_data[i].resource;
 				_render_target_data[i].rtv = o._render_target_data[i].rtv;
@@ -64,7 +66,7 @@ namespace primal::graphics::d3d12
 		{
 			_swap_chain = o._swap_chain;
 
-			for (u32 i{ 0 }; i < frame_buffer_count; ++i)
+			for (u32 i{ 0 }; i < buffer_count; ++i)
 			{
 				_render_target_data[i] = o._render_target_data[i];
 			}
@@ -83,7 +85,7 @@ namespace primal::graphics::d3d12
 		{
 			_swap_chain = nullptr;
 
-			for (u32 i{ 0 }; i < frame_buffer_count; ++i)
+			for (u32 i{ 0 }; i < buffer_count; ++i)
 			{
 				_render_target_data[i] = {};
 			}
@@ -104,7 +106,7 @@ namespace primal::graphics::d3d12
 		};
 
 		IDXGISwapChain4* _swap_chain{ nullptr };
-		render_target_data	_render_target_data[frame_buffer_count]{};
+		render_target_data	_render_target_data[buffer_count]{};
 		platform::window	_window{};
 		mutable u32			_current_bb_index{ 0 };
 		u32					_allow_tearing{ 0 };

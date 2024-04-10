@@ -1,5 +1,6 @@
 #include "D3D12Core.h"
 #include "D3D12Resources.h"
+#include "D3D12Helpers.h"
 
 namespace primal::graphics::d3d12 
 {
@@ -125,5 +126,63 @@ namespace primal::graphics::d3d12
 		core::set_deferred_releases_flag();
 
 		handle = {};
+	}
+
+	d3d12_texture::d3d12_texture(d3d12_texture_init_info info)
+	{
+		auto *const device{ core::device() };
+
+		assert(device);
+
+		D3D12_CLEAR_VALUE *const clear_value
+		{
+			(info.desc &&
+			(info.desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET ||
+			info.desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL))
+			? &info.clear_value : nullptr
+		};
+
+		if (info.resource)
+		{
+			assert(!info.heap);
+
+			_resource = info.resource;
+		}
+		else if (info.heap)
+		{
+			assert(!info.heap && info.desc);
+
+			DXCall(device->CreatePlacedResource(
+					info.heap, 
+					info.allocation_info.Offset, 
+					info.desc, 
+					info.initial_state, 
+					clear_value, 
+					IID_PPV_ARGS(&_resource)));
+		}
+		else 
+		{
+			assert(!info.resource);
+
+			DXCall(device->CreateCommittedResource(
+					&d3dx::heap_properties.default_heap,
+					D3D12_HEAP_FLAG_NONE,
+					info.desc,
+					info.initial_state,
+					clear_value,
+					IID_PPV_ARGS(&_resource)));
+		}
+
+		assert(_resource);
+
+		_srv = core::srv_heap().allocate();
+
+		device->CreateShaderResourceView(_resource, info.srv_desc,_srv.cpu);
+	}
+
+	void d3d12_texture::release()
+	{
+		core::dsv_heap().free(_srv);
+		core::deferred_release(_resource);
 	}
 }
