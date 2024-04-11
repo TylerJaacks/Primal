@@ -1,3 +1,4 @@
+// ReSharper disable All
 #include "TestRenderer.h"
 
 #ifdef TEST_RENDERER
@@ -14,14 +15,13 @@ time_it timer{};
 
 void destroy_render_surface(graphics::render_surface& surface);
 
-inline LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
 	{
 	case WM_DESTROY:
 	{
 		bool all_closed{ true };
-
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i)
 		{
 			if (_surfaces[i].window.is_valid())
@@ -35,26 +35,19 @@ inline LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					all_closed = false;
 				}
 			}
-			else 
-			{
-				all_closed = false;
-			}
 		}
-
 		if (all_closed)
 		{
 			PostQuitMessage(0);
-
 			return 0;
 		}
 	}
+	break;
 	case WM_SYSCHAR:
 		if (wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN))
 		{
-			const platform::window win{ platform::window_id{static_cast<id::id_type>(GetWindowLongPtr(hwnd, GWLP_USERDATA))} };
-
+			platform::window win{ platform::window_id{(id::id_type)GetWindowLongPtr(hwnd, GWLP_USERDATA)} };
 			win.set_fullscreen(!win.is_fullscreen());
-
 			return 0;
 		}
 		break;
@@ -62,10 +55,8 @@ inline LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		if (wparam == VK_ESCAPE)
 		{
 			PostMessage(hwnd, WM_CLOSE, 0, 0);
+			return 0;
 		}
-		break;
-	default:
-		break;
 	}
 
 	return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -95,10 +86,10 @@ bool engine_test::initialize()
 
 	platform::window_init_info info[]
 	{
-		{&win_proc, nullptr, L"Render Window 1", 100, 100, 400, 800 },
-		{&win_proc, nullptr, L"Render Window 2", 150, 150, 800, 400 },
-		{&win_proc, nullptr, L"Render Window 3", 200, 200, 400, 400 },
-		{&win_proc, nullptr, L"Render Window 4", 250, 250, 800, 800 },
+		{&WinProc, nullptr, L"Render Window 1", 100, 100, 400, 800 },
+		{&WinProc, nullptr, L"Render Window 2", 150, 150, 800, 400 },
+		{&WinProc, nullptr, L"Render Window 3", 200, 200, 400, 400 },
+		{&WinProc, nullptr, L"Render Window 4", 250, 250, 800, 800 },
 	};
 
 	static_assert(_countof(info) == _countof(_surfaces));
@@ -113,7 +104,7 @@ void engine_test::run()
 {
 	timer.begin();
 
-	//std::this_thread::sleep_for(std::chrono::microseconds(10));
+	std::this_thread::sleep_for(std::chrono::microseconds(10));
 
 	for (u32 i{ 0 }; i < _countof(_surfaces); ++i)
 	{

@@ -9,7 +9,7 @@ using namespace primal;
 
 inline platform::window windows[4];
 
-inline LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+inline LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
 	{
@@ -55,10 +55,10 @@ public:
 	{
 		platform::window_init_info info[]
 		{
-			{&win_proc, nullptr, L"Test Window 1", 100, 100, 400, 800 },
-			{&win_proc, nullptr, L"Test Window 2", 150, 150, 800, 400 },
-			{&win_proc, nullptr, L"Test Window 3", 200, 200, 400, 400 },
-			{&win_proc, nullptr, L"Test Window 4", 250, 250, 800, 800 },
+			{&WinProc, nullptr, L"Test Window 1", 100, 100, 400, 800 },
+			{&WinProc, nullptr, L"Test Window 2", 150, 150, 800, 400 },
+			{&WinProc, nullptr, L"Test Window 3", 200, 200, 400, 400 },
+			{&WinProc, nullptr, L"Test Window 4", 250, 250, 800, 800 },
 		};
 
 		static_assert(_countof(info) == _countof(windows));
