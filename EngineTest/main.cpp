@@ -1,3 +1,5 @@
+#pragma warning(disable: 28251)
+
 #include "Test.h"
 
 #pragma comment(lib, "Engine.lib")

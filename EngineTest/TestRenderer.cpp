@@ -79,10 +79,13 @@ void destroy_render_surface(graphics::render_surface& surface)
 
 bool engine_test::initialize()
 {
-	bool result{ graphics::initialize(graphics::graphics_platform::direct3d12) };
+	while (!compile_shaders())
+	{
+		if (MessageBox(nullptr, L"Failed to compile engine shaders.", L"Shader Compliation Error", MB_RETRYCANCEL) != IDRETRY)
+			return false;
+	}
 
-	if (result == false)
-		return result;
+	if (!graphics::initialize(graphics::graphics_platform::direct3d12)) return false;
 
 	platform::window_init_info info[]
 	{

@@ -3,11 +3,13 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="TestRenderer.cpp" />
+    <ClCompile Include="ShaderCompliation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Test.h" />
     <ClInclude Include="TestEntityComponents.h" />
     <ClInclude Include="TestWindow.h" />
     <ClInclude Include="TestRenderer.h" />
+    <ClInclude Include="ShaderCompliation.h" />
   </ItemGroup>
 </Project>

@@ -162,5 +162,12 @@ namespace primal::content
 			game_entity::remove(entity.get_id());
 		}
 	}
+
+	bool load_engine_shaders(std::unique_ptr<u8[]>& shaders, u64& size)
+	{
+		const auto path = graphics::get_engine_shaders_path();
+
+		return read_file(path, shaders, size);
+	}
 #endif
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Test.h"
+#include "ShaderCompliation.h"
 
 class engine_test : public test
 {
