@@ -1,3 +1,5 @@
+// ReSharper disable CppInconsistentNaming
+// ReSharper disable CppUseTypeTraitAlias
 #pragma once
 #include "CommonHeaders.h"
 
@@ -9,12 +11,12 @@ namespace primal::utl
 	public:
 		vector() = default;
 
-		constexpr explicit vector(u64 count)
+		constexpr explicit vector(const u64 count)
 		{
 			resize(count);
 		}
 
-		constexpr explicit vector(u64 count, const T& value)
+		constexpr explicit vector(const u64 count, const T& value)
 		{
 			resize(count, value);
 		}
@@ -24,18 +26,9 @@ namespace primal::utl
 			*this = o;
 		}
 
-		constexpr vector(const  vector&& o) : _capacity{ o._capacity }, _size{ o._size }, _data{ o._data }
+		constexpr vector(vector&& o) noexcept : _capacity{ o._capacity }, _size{ o._size }, _data{ o._data }
 		{
 			o.reset();
-		}
-
-		template<typename it, typename = std::enable_if<std::_Is_iterator_v<it>>>
-		constexpr explicit vector(it first, it last)
-		{
-			for (; first != last; ++first)
-			{
-				emplace_back(*first);
-			}
 		}
 
 		constexpr vector& operator=(const vector& o)
@@ -59,7 +52,7 @@ namespace primal::utl
 			return *this;
 		}
 
-		constexpr vector& operator=(vector&& o)
+		constexpr vector& operator=(vector&& o) noexcept
 		{
 			assert(this != std::addressof(o));
 
@@ -82,14 +75,14 @@ namespace primal::utl
 			_size = 0;
 		}
 
-		constexpr T *const erase_unordered(u64 index)
+		constexpr T* erase_unordered(u64 index)
 		{
 			assert(_data && index < _size);
 
 			return erase_unordered(std::addressof(_data[index]));
 		}
 
-		constexpr T *const erase_unordered(T* const item)
+		constexpr T* erase_unordered(T* const item)
 		{
 			assert(_data && item >= std::addressof(_data[0]) && item < std::addressof(_data[_size]));
 
@@ -105,14 +98,14 @@ namespace primal::utl
 			return item;
 		}
 
-		constexpr T *const erase(u64 index)
+		constexpr T* erase(u64 index)
 		{
 			assert(_data && index < _size);
 
 			return erase(std::addressof(_data[index]));
 		}
 
-		constexpr T *const erase(T *const item)
+		constexpr T* erase(T* const item)
 		{
 			assert(_data && item >= std::addressof(_data[0]) && item < std::addressof(_data[_size]));
 
@@ -128,7 +121,7 @@ namespace primal::utl
 			return item;
 		}
 
-		constexpr void swap(vector& o)
+		constexpr void swap(vector& o) noexcept
 		{
 			if (this != std::addressof(o))
 			{
@@ -145,7 +138,7 @@ namespace primal::utl
 			return _data;
 		}
 
-		[[nodiscard]] constexpr T *const data() const
+		[[nodiscard]] constexpr T* data() const
 		{
 			return _data;
 		}
@@ -267,9 +260,9 @@ namespace primal::utl
 			return item;
 		}
 
-		constexpr void resize(u64 new_size)
+		constexpr void resize(const u64 new_size)
 		{
-			static_assert(std::is_default_constructible_v<T>, "Type must be default-constructible");
+			static_assert(std::is_default_constructible<T>::value, "Type must be default-constructible");
 
 			if (new_size > _size)
 			{
@@ -293,9 +286,9 @@ namespace primal::utl
 			assert(new_size == _size);
 		}
 
-		constexpr void resize(u64 new_size, const T& value)
+		constexpr void resize(const u64 new_size, const T& value)
 		{
-			static_assert(std::is_copy_constructible_v<T>, "Type must be copy-constructible");
+			static_assert(std::is_copy_constructible<T>::value, "Type must be copy-constructible");
 
 			if (new_size > _size)
 			{
@@ -319,7 +312,7 @@ namespace primal::utl
 			assert(new_size == _size);
 		}
 
-		constexpr void reserve(u64 new_capacity)
+		constexpr void reserve(const u64 new_capacity)
 		{
 			if (new_capacity > _capacity)
 			{
@@ -351,7 +344,7 @@ namespace primal::utl
 			_data = nullptr;
 		}
 
-		constexpr void destruct_range(u64 first, u64 last)
+		constexpr void destruct_range(u64 first, const u64 last)
 		{
 			assert(destruct);
 			assert(first <= _size && last <= _size && first <= last);

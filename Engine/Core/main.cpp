@@ -1,9 +1,30 @@
+#include "CommonHeaders.h"
+
+#include <filesystem>
+
 #ifdef _WIN64
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
 #include <crtdbg.h>
+
+namespace
+{
+	std::filesystem::path set_current_directory_to_executable_path()
+	{
+		wchar_t path[MAX_PATH];
+
+		if (const u32 length{ GetModuleFileName(nullptr, &path[0], MAX_PATH) }; !length || GetLastError() == ERROR_INSUFFICIENT_BUFFER) return {};
+
+		const std::filesystem::path p{ path };
+
+		current_path(p.parent_path());
+
+		return std::filesystem::current_path();
+	}
+}
+
 #ifndef USE_WITH_EDITOR
 
 extern bool engine_initialize();
@@ -16,6 +37,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+	set_current_directory_to_executable_path();
+
 	if (engine_initialize())
 	{
 		MSG msg{};
@@ -24,7 +47,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 		while (is_running)
 		{
-			while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 			{
 				TranslateMessage(&msg);
 

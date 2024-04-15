@@ -1,3 +1,4 @@
+// ReSharper disable All
 #pragma once
 
 #include "D3D12CommonHeaders.h"
@@ -9,6 +10,7 @@ namespace primal::graphics::d3d12
 	{
 	public:
 		constexpr static u32 buffer_count{ 3 };
+		constexpr static DXGI_FORMAT default_back_buffer_format{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };
 
 		explicit d3d12_surface(platform::window window) : _window{ window }
 		{
@@ -46,17 +48,16 @@ namespace primal::graphics::d3d12
 #endif
 		~d3d12_surface() { release(); }
 
-		void create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue, DXGI_FORMAT format);
+		void create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue, DXGI_FORMAT format = default_back_buffer_format);
 		void present() const;
-		void resize();
+		static void resize();
 
-		constexpr u32 width() const { return (u32)_viewport.Width; }
-		constexpr u32 height() const { return (u32)_viewport.Height; }
-		constexpr ID3D12Resource* const back_buffer() const { return _render_target_data[_current_bb_index].resource; }
+		constexpr u32 width() const { return static_cast<u32>(_viewport.Width); }
+		constexpr u32 height() const { return static_cast<u32>(_viewport.Height); }
+		constexpr ID3D12Resource* back_buffer() const { return _render_target_data[_current_bb_index].resource; }
 		constexpr D3D12_CPU_DESCRIPTOR_HANDLE rtv() const { return _render_target_data[_current_bb_index].rtv.cpu; }
 		constexpr const D3D12_VIEWPORT& viewport() const { return _viewport; }
 		constexpr const D3D12_RECT& scissor_rect() const { return _scissor_rect; }
-
 
 	private:
 		void finalize();
@@ -106,9 +107,10 @@ namespace primal::graphics::d3d12
 			descriptor_handle rtv{};
 		};
 
-		IDXGISwapChain4* _swap_chain{ nullptr };
+		IDXGISwapChain4*	_swap_chain{ nullptr };
 		render_target_data	_render_target_data[buffer_count]{};
 		platform::window	_window{};
+		DXGI_FORMAT			_format{ default_back_buffer_format };
 		mutable u32			_current_bb_index{ 0 };
 		u32					_allow_tearing{ 0 };
 		u32					_present_flags{ 0 };

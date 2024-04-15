@@ -5,7 +5,7 @@ namespace primal::graphics::d3d12
 {
 	namespace 
 	{
-		constexpr DXGI_FORMAT to_non_srgb(DXGI_FORMAT format)
+		constexpr DXGI_FORMAT to_non_srgb(const DXGI_FORMAT format)
 		{
 			if (format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB) return DXGI_FORMAT_R8G8B8A8_UNORM;
 
@@ -13,16 +13,16 @@ namespace primal::graphics::d3d12
 		}
 	} // anonymous namespace
 
-	void d3d12_surface::create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue, DXGI_FORMAT format)
+	void d3d12_surface::create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue, const DXGI_FORMAT format)
 	{
 		assert(factory && cmd_queue);
 
 		release();
 
 		if (factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &_allow_tearing, sizeof(u32)))
-		{
 			_present_flags = DXGI_PRESENT_ALLOW_TEARING;
-		}
+
+		_format = format;
 
 		DXGI_SWAP_CHAIN_DESC1 desc{};
 		
@@ -41,7 +41,7 @@ namespace primal::graphics::d3d12
 
 		IDXGISwapChain1* swap_chain;
 
-		HWND hwnd{ (HWND)_window.handle() };
+		const auto hwnd{ static_cast<HWND>(_window.handle()) };
 
 		DXCall(factory->CreateSwapChainForHwnd(cmd_queue, hwnd, &desc, nullptr, nullptr, &swap_chain));
 		DXCall(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER));
@@ -52,9 +52,7 @@ namespace primal::graphics::d3d12
 		_current_bb_index = _swap_chain->GetCurrentBackBufferIndex();
 
 		for (u32 i{ 0 }; i < buffer_count; ++i)
-		{
 			_render_target_data[i].rtv = core::rtv_heap().allocate();
-		}
 
 		finalize();
 	}
@@ -90,18 +88,18 @@ namespace primal::graphics::d3d12
 	{
 		for (u32 i{ 0 }; i < buffer_count; ++i)
 		{
-			render_target_data& data{ _render_target_data[i] };
+			auto& [resource, rtv]{ _render_target_data[i] };
 
-			assert(!data.resource);
+			assert(!resource);
 
-			DXCall(_swap_chain->GetBuffer(i, IID_PPV_ARGS(&data.resource)));
+			DXCall(_swap_chain->GetBuffer(i, IID_PPV_ARGS(&resource)));
 
 			D3D12_RENDER_TARGET_VIEW_DESC desc{};
 
-			desc.Format = core::default_render_target_format();
+			desc.Format = _format;
 			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-			core::device()->CreateRenderTargetView(data.resource, &desc, data.rtv.cpu);
+			core::device()->CreateRenderTargetView(resource, &desc, rtv.cpu);
 		}
 
 		DXGI_SWAP_CHAIN_DESC desc{};
@@ -116,13 +114,13 @@ namespace primal::graphics::d3d12
 		_viewport.TopLeftX = 0.f;
 		_viewport.TopLeftY = 0.f;
 
-		_viewport.Width = (float)width;
-		_viewport.Height = (float)height;
+		_viewport.Width = static_cast<float>(width);
+		_viewport.Height = static_cast<float>(height);
 
 		_viewport.MinDepth = 0.f;
 		_viewport.MaxDepth = 1.f;
 
-		_scissor_rect = { 0, 0, (s32)width, (s32)height };
+		_scissor_rect = { 0, 0, static_cast<s32>(width), static_cast<s32>(height) };
 	}
 }
 

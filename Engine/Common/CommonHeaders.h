@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma warning(disable: 4530) // disable exception warnings
+
 #include <stdint.h>
 #include <assert.h>
 #include <typeinfo>
