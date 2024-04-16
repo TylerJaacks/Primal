@@ -76,7 +76,7 @@ namespace primal::content
 
 		static_assert(_countof(component_readers) == component_type::count);
 
-		bool read_file(std::filesystem::path path, std::unique_ptr<u8[]>& data, u64& size)
+		bool read_file(const std::filesystem::path& path, std::unique_ptr<u8[]>& data, u64& size)
 		{
 			if (!std::filesystem::exists(path)) return false;
 

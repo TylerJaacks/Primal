@@ -34,7 +34,7 @@ namespace primal::graphics::d3d12::core {
 		}
 	}
 
-	id3d12_device* device();
+	id3d12_device *const device();
 
 	descriptor_heap&	rtv_heap();
 	descriptor_heap&	dsv_heap();

@@ -97,5 +97,6 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Graphics\Direct3D12\Shaders\FullScreenTriangle.hlsl" />
+    <FxCompile Include="Graphics\Direct3D12\Shaders\FillColor.hlsl" />
   </ItemGroup>
 </Project>

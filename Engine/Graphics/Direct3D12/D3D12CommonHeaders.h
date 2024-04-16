@@ -10,6 +10,7 @@
 
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3d12.lib")
+#pragma comment(lib, "dxcompiler.lib")
 
 namespace primal::graphics::d3d12
 {
@@ -59,3 +60,6 @@ if (swprintf_s(full_name, L"%s[%u]", name, n) >0 ){ \
 #define NAME_D3D12_OBJECT(x, name)
 #define NAME_D3D12_OBJECT_INDEXED(x, n, name)
 #endif // _DEBUG
+
+#include "D3D12Resources.h"
+#include "D3D12Helpers.h"

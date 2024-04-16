@@ -8,7 +8,7 @@ namespace primal::graphics
 	{
 		constexpr const char* engine_shader_paths[]
 		{
-			".\\shaders\d3d12\\shaders.bin"
+			R"(.\shaders\d3d12\shaders.bin)"
 		};
 
 		platform_interface gfx{};
