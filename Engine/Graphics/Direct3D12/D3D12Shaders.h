@@ -34,5 +34,5 @@ namespace primal::graphics::d3d12::shaders
 	bool initialize();
 	void shutdown();
 
-	D3D12_SHADER_BYTECODE get_engine_shader_bytecode(engine_shader::id id);
+	D3D12_SHADER_BYTECODE get_engine_shader(engine_shader::id id);
 }

@@ -155,36 +155,37 @@ namespace primal::graphics::d3d12
 			assert(!info.heap && info.desc);
 
 			DXCall(device->CreatePlacedResource(
-					info.heap, 
-					info.allocation_info.Offset, 
-					info.desc, 
-					info.initial_state, 
-					clear_value, 
-					IID_PPV_ARGS(&_resource)));
+				info.heap,
+				info.allocation_info.Offset,
+				info.desc,
+				info.initial_state,
+				clear_value,
+				IID_PPV_ARGS(&_resource)));
 		}
-		else 
+		else
 		{
 			assert(!info.resource);
 
 			DXCall(device->CreateCommittedResource(
-					&d3dx::heap_properties.default_heap,
-					D3D12_HEAP_FLAG_NONE,
-					info.desc,
-					info.initial_state,
-					clear_value,
-					IID_PPV_ARGS(&_resource)));
+				&d3dx::heap_properties.default_heap,
+				D3D12_HEAP_FLAG_NONE,
+				info.desc,
+				info.initial_state,
+				clear_value,
+				IID_PPV_ARGS(&_resource)));
 		}
 
 		assert(_resource);
 
 		_srv = core::srv_heap().allocate();
 
-		device->CreateShaderResourceView(_resource, info.srv_desc,_srv.cpu);
+		device->CreateShaderResourceView(_resource, info.srv_desc, _srv.cpu);
 	}
 
-	void d3d12_texture::release()
+	void
+		d3d12_texture::release()
 	{
-		core::dsv_heap().free(_srv);
+		core::srv_heap().free(_srv);
 		core::deferred_release(_resource);
 	}
 #pragma endregion
@@ -242,35 +243,36 @@ namespace primal::graphics::d3d12
 		if (info.desc->Format == DXGI_FORMAT_D32_FLOAT)
 		{
 			info.desc->Format == DXGI_FORMAT_R32_TYPELESS;
-
-			srv_desc.Format								= DXGI_FORMAT_R32_FLOAT;
-			srv_desc.Shader4ComponentMapping			= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srv_desc.Texture2D.MipLevels				= 1;
-			srv_desc.Texture2D.MostDetailedMip			= 0;
-			srv_desc.Texture2D.PlaneSlice				= 0;
-			srv_desc.Texture2D.ResourceMinLODClamp		= 0.f;
-
-			assert(!info.srv_desc && !info.resource);
-
-			info.srv_desc = &srv_desc;
-
-			_texture = d3d12_texture(info);
-
-			D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc{};
-
-			dsv_desc.ViewDimension			= D3D12_DSV_DIMENSION_TEXTURE2D;
-			dsv_desc.Flags					= D3D12_DSV_FLAG_NONE;
-			dsv_desc.Format					= dsv_format;
-			dsv_desc.Texture2D.MipSlice		= 0;
-
-			_dsv = core::dsv_heap().allocate();
-
-			auto *const device{ core::device() };
-
-			assert(device);
-
-			device->CreateDepthStencilView(resource(), &dsv_desc, _dsv.cpu);
+			srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
 		}
+
+		srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srv_desc.Texture2D.MipLevels = 1;
+		srv_desc.Texture2D.MostDetailedMip = 0;
+		srv_desc.Texture2D.PlaneSlice = 0;
+		srv_desc.Texture2D.ResourceMinLODClamp = 0.f;
+
+		assert(!info.srv_desc && !info.resource);
+
+		info.srv_desc = &srv_desc;
+
+		_texture = d3d12_texture(info);
+
+		D3D12_DEPTH_STENCIL_VIEW_DESC dsv_desc{};
+
+		dsv_desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		dsv_desc.Flags = D3D12_DSV_FLAG_NONE;
+		dsv_desc.Format = dsv_format;
+		dsv_desc.Texture2D.MipSlice = 0;
+
+		_dsv = core::dsv_heap().allocate();
+
+		auto *const device{ core::device() };
+
+		assert(device);
+
+		device->CreateDepthStencilView(resource(), &dsv_desc, _dsv.cpu);
 	}
 
 	void d3d12_depth_buffer::release()
@@ -279,5 +281,5 @@ namespace primal::graphics::d3d12
 
 		_texture.release();
 	}
-#pragma endregion0
+#pragma endregion
 }

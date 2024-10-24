@@ -21,7 +21,6 @@ namespace primal::platform
 
 		window_info& get_from_id(window_id id)
 		{
-			assert(id < windows.size());
 			assert(windows[id].hwnd);
 
 			return windows[id];
@@ -38,7 +37,7 @@ namespace primal::platform
 		{
 			window_info* info{ nullptr };
 
-			switch (msg)  // NOLINT(hicpp-multiway-paths-covered)
+			switch (msg)
 			{
 			case WM_DESTROY:
 				get_from_handle(hwnd).is_closed = true;

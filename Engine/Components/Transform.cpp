@@ -28,10 +28,10 @@ namespace primal::transform
 			scales.emplace_back(info.scale);
 		}
 
-		return component(transform_id{static_cast<id::id_type>(positions.size()) - 1});
+		return component{ transform_id{ entity.get_id() } };
 	}
 
-	void remove(const component c)
+	void remove([[maybe_unused]] const component c)
 	{
 		assert(c.is_valid());
 	}
