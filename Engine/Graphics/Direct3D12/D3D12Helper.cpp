@@ -8,6 +8,25 @@ namespace primal::graphics::d3d12::d3dx
 
 	}
 
+	void transition_resource(id3d12_graphics_command_list* cmd_list,
+		ID3D12Resource* resource,
+		const D3D12_RESOURCE_STATES before,
+		const D3D12_RESOURCE_STATES after,
+		const D3D12_RESOURCE_BARRIER_FLAGS flags,
+		const u32 subresources)
+	{
+		D3D12_RESOURCE_BARRIER barrier{};
+
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = flags;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = before;
+		barrier.Transition.StateAfter = after;
+		barrier.Transition.Subresource = subresources;
+
+		cmd_list->ResourceBarrier(1, &barrier);
+	}
+
 	ID3D12RootSignature* create_root_signature(const D3D12_ROOT_SIGNATURE_DESC1& desc)
 	{
 		D3D12_VERSIONED_ROOT_SIGNATURE_DESC versioned_desc{};
