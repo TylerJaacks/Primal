@@ -39,6 +39,12 @@ namespace
 			"FillColorPS",
 			engine_shader::fill_color_ps,
 			shader_type::pixel
+		},
+		{
+			"PostProcessing.hlsl",
+			"PostProcessingPS",
+			engine_shader::post_processing_ps,
+			shader_type::pixel
 		}
 	};
 
@@ -81,23 +87,23 @@ namespace
 
 			HRESULT hr{ S_OK };
 
+			// Load the source file using Utils interface.
 			ComPtr<IDxcBlobEncoding> source_blob{ nullptr };
-
 			DXCall(hr = _utils->LoadFile(full_path.c_str(), nullptr, &source_blob));
-
 			if (FAILED(hr)) return nullptr;
-
 			assert(source_blob && source_blob->GetBufferSize());
 
 			std::wstring file{ to_wstring(info.file) };
 			std::wstring func{ to_wstring(info.function) };
 			std::wstring prof{ to_wstring(_profile_strings[static_cast<u32>(info.type)])};
+			std::wstring inc{ to_wstring(shaders_source_path) };
 
 			LPCWSTR args[]
 			{
-				file.c_str(),
-				L"-E", func.c_str(),
-				L"-T", prof.c_str(),
+				file.c_str(),							// Optional shader source file name for error reporting.
+				L"-E", func.c_str(),					// Entry function
+				L"-T", prof.c_str(),					// Target profile
+				L"-I", inc.c_str(),						// Include path
 				DXC_ARG_ALL_RESOURCES_BOUND,
 #if _DEBUG
 				DXC_ARG_DEBUG,
@@ -106,8 +112,8 @@ namespace
 				DXC_ARG_OPTIMIZATION_LEVEL3,
 #endif
 				DXC_ARG_WARNINGS_ARE_ERRORS,
-				L"-Qstrip_reflect",
-				L"-Qstrip_debug"
+				L"-Qstrip_reflect",						// Strip reflections into a separate blob.
+				L"-Qstrip_debug"						// Strip debug information into a separate blob.
 			};
 
 			OutputDebugStringA("Compiling Shaders...");

@@ -54,6 +54,7 @@
     <ClInclude Include="Graphics\Direct3D12\D3D12Helpers.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Shaders.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12GPass.h" />
+    <ClInclude Include="Graphics\Direct3D12\D3D12PostProcessing.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\Entity.cpp">
@@ -79,6 +80,7 @@
     <ClCompile Include="Graphics\Direct3D12\D3D12Helper.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Shaders.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12GPass.cpp" />
+    <ClCompile Include="Graphics\Direct3D12\D3D12PostProcessing.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">
@@ -100,5 +102,9 @@
   <ItemGroup>
     <FxCompile Include="Graphics\Direct3D12\Shaders\FullScreenTriangle.hlsl" />
     <FxCompile Include="Graphics\Direct3D12\Shaders\FillColor.hlsl" />
+    <FxCompile Include="Graphics\Direct3D12\Shaders\PostProcessing.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Graphics\Direct3D12\Shaders\Fractals.hlsli" />
   </ItemGroup>
 </Project>

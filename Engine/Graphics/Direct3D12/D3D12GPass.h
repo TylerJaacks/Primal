@@ -12,6 +12,9 @@ namespace primal::graphics::d3d12::gpass
 	bool initialize();
 	void shutdown();
 
+	[[nodisregard]] const d3d12_render_texture& main_buffer();
+	[[nodisregard]] const d3d12_depth_buffer& depth_buffer();
+
 	void set_size(math::u32v2 size);
 	void depth_prepass(id3d12_graphics_command_list* cmd_list, const d3d12_frame_info& frame_info);
 	void render(id3d12_graphics_command_list* cmd_list, const d3d12_frame_info& frame_info);

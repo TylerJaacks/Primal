@@ -35,6 +35,7 @@
     <ClInclude Include="Graphics\Direct3D12\D3D12GPass.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Helpers.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Interface.h" />
+    <ClInclude Include="Graphics\Direct3D12\D3D12PostProcessing.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Resources.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Shaders.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12Surface.h" />
@@ -60,6 +61,7 @@
     <ClCompile Include="Graphics\Direct3D12\D3D12GPass.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Helper.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Interface.cpp" />
+    <ClCompile Include="Graphics\Direct3D12\D3D12PostProcessing.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Resources.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Shaders.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Surface.cpp" />
@@ -79,6 +81,19 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseEditor|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="Graphics\Direct3D12\Shaders\PostProcessing.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='ReleaseEditor|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseEditor|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Graphics\Direct3D12\Shaders\Fractals.hlsli" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
