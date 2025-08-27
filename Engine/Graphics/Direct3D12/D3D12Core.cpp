@@ -303,6 +303,11 @@ namespace primal::graphics::d3d12::core
 
 			if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface))))
 				debug_interface->EnableDebugLayer();
+
+#if 0
+#pragma message("WARNING: GPU_based validation is enabled. This will considerably slow down the renderer!")
+			debug_interface->SetEnableGPUBasedValidation(1);
+#endif
 			else 
 				OutputDebugStringA("Warning: D3D12 Debug interface is not available.");
 

@@ -49,7 +49,7 @@ namespace primal::graphics::d3d12
 
 		void create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue, DXGI_FORMAT format = default_back_buffer_format);
 		void present() const;
-		static void resize();
+		void resize();
 
 		constexpr u32 width() const { return static_cast<u32>(_viewport.Width); }
 		constexpr u32 height() const { return static_cast<u32>(_viewport.Height); }

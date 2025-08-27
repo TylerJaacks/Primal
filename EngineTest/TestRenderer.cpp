@@ -21,6 +21,8 @@ void test_shutdown();
 
 LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	bool toggle_fullscreen{false};
+
 	switch (msg)
 	{
 	case WM_DESTROY:
@@ -47,13 +49,11 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		}
 	}
 	break;
+	case WM_SIZE:
+		resized = (wparam != SIZE_MINIMIZED);
+		break;
 	case WM_SYSCHAR:
-		if (wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN))
-		{
-			platform::window win{ platform::window_id{(id::id_type)GetWindowLongPtr(hwnd, GWLP_USERDATA)} };
-			win.set_fullscreen(!win.is_fullscreen());
-			return 0;
-		}
+		toggle_fullscreen = wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN);
 		break;
 	case WM_KEYDOWN:
 		if (wparam == VK_ESCAPE)
@@ -66,6 +66,31 @@ LRESULT WinProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			is_restarting = true;
 			test_shutdown();
 			test_initialize();
+		}
+	}
+
+	if ((resized && GetAsyncKeyState(VK_LBUTTON) >= 0) || toggle_fullscreen)
+	{
+		platform::window win{ platform::window_id{(id::id_type)GetWindowLongPtr(hwnd, GWLP_USERDATA)} };
+
+		for (u32 i{ 0 }; i < _countof(_surfaces); ++i)
+		{
+			if (win.get_id() == _surfaces[i].window.get_id())
+			{
+				if (toggle_fullscreen)
+				{
+					win.set_fullscreen(!win.is_fullscreen());
+
+					return 0;
+				}
+				else
+				{
+					_surfaces[i].surface.resize(win.width(), win.height());
+					resized = false;
+				}
+
+				break;
+			}
 		}
 	}
 
@@ -132,7 +157,7 @@ void engine_test::run()
 {
 	timer.begin();
 
-	std::this_thread::sleep_for(std::chrono::microseconds(10));
+	//std::this_thread::sleep_for(std::chrono::microseconds(10));
 
 	for (u32 i{ 0 }; i < _countof(_surfaces); ++i)
 	{
