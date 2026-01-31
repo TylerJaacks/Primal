@@ -45,10 +45,10 @@ namespace PrimalEditor
         private const string _engineDll = "EngineDll.dll";
 
         [DllImport(_engineDll, CharSet=CharSet.Ansi)]
-        public static extern int LoadGameCodeDll(string dllPath);
+        public static extern int LoadGameCodeDLL(string dllPath);
 
         [DllImport(_engineDll, CharSet = CharSet.Ansi)]
-        public static extern int UnloadGameCodeDll();
+        public static extern int UnloadGameCodeDLL();
 
         [DllImport(_engineDll)]
         public static extern IntPtr GetScriptCreator(string name);

@@ -23,6 +23,7 @@ namespace primal::platform
 		{
 			assert(windows[id].hwnd);
 
+			// TODO: Error when closing the Editor
 			return windows[id];
 		}
 

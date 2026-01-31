@@ -4,20 +4,35 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
-
+using System.Threading;
+using EnvDTE;
 using PrimalEditor.Utilities;
 
 using Project = PrimalEditor.GameProject.Project;
 
 namespace PrimalEditor.GameDev;
 
+public enum BuildConfiguration
+{
+    Debug,
+    DebugEditor,
+    Release,
+    ReleaseEditor,
+}
+
 public static class VisualStudio
 {
+    private static readonly ManualResetEventSlim _resetEvent = new ManualResetEventSlim(false);
+    private static readonly string _programId = "VisualStudio.DTE.18.0";
+    private static readonly object _lock = new object();
+    private static readonly string[] _buildConfigurationNames = { "Debug", "DebugEditor", "Release", "ReleaseEditor" };
+
     private static EnvDTE80.DTE2 _vsInstance = null;
-    private const string ProgramId = "VisualStudio.DTE.17.0";
 
     public static bool BuildSucceeded { get; private set; } = true;
-    public static bool BuildFinished { get; private set; } = true;
+    public static bool BuildDone { get; private set; } = true;
+
+    public static string GetConfigurationName(BuildConfiguration config) => _buildConfigurationNames[(int)config];
 
     [DllImport("ole32.dll")]
     private static extern int GetRunningObjectTable(uint reserved, out IRunningObjectTable pObjectTable);
@@ -25,7 +40,23 @@ public static class VisualStudio
     [DllImport("ole32.dll")]
     private static extern int CreateBindCtx(uint reserved, out IBindCtx pBindCtx);
 
-    public static void OpenVisualStudio(string solutionPath)
+    private static void CallOnSTAThread(Action action)
+    {
+        var thread = new System.Threading.Thread(() =>
+        {
+            MessageFilter.Register();
+
+            try { action(); }
+            catch(Exception ex) { Logger.Log(MessageType.Warning, ex.Message); }
+            finally { MessageFilter.Revoke();  }
+        });
+
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+    }
+
+    private static void OpenVisualStudio_Internal(string solutionPath)
     {
         IRunningObjectTable runningObjectTable = null;
         IEnumMoniker monikerTable = null;
@@ -54,7 +85,7 @@ public static class VisualStudio
 
                 currentMoniker[0]?.GetDisplayName(bindCtx, null, out name);
 
-                if (!name.Contains(ProgramId)) continue;
+                if (!name.Contains(_programId)) continue;
 
                 hResult = runningObjectTable.GetObject(currentMoniker[0], out var obj);
                         
@@ -62,21 +93,23 @@ public static class VisualStudio
 
                 var dte = obj as EnvDTE80.DTE2;
 
-                if (dte != null)
+                var solutionName = string.Empty;
+
+                CallOnSTAThread(() =>
                 {
-                    var solutionName = dte.Solution.FullName;
+                    solutionName = dte.Solution.FullName;
+                });
 
-                    if (solutionName != solutionPath) continue;
+                if (solutionName == solutionPath)
+                {
+                    _vsInstance = dte;
+                    break;
                 }
-
-                _vsInstance = dte;
-
-                break;
             }
 
             if (_vsInstance != null) return;
 
-            var visualStudioType = Type.GetTypeFromProgID(ProgramId, true);
+            var visualStudioType = Type.GetTypeFromProgID(_programId, true);
 
             if (visualStudioType != null)
                 _vsInstance = Activator.CreateInstance(visualStudioType) as EnvDTE80.DTE2;
@@ -95,66 +128,66 @@ public static class VisualStudio
         }
     }
 
-    public static void CloseVisualStudio()
+    public static void OpenVisualStudion(string solutionPath)
     {
-        if (_vsInstance?.Solution.IsOpen == true)
-        {
-            _vsInstance.ExecuteCommand("File.SaveAll");
-            _vsInstance.Solution.Close();
-        }
-
-        try
-        {
-            _vsInstance?.Quit();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine(ex);
-
-            Logger.Log(MessageType.Error, "Failed to close Visual Studio.");
-        }
+        lock(_lock) { OpenVisualStudio_Internal(solutionPath); }
     }
 
-    public static bool AddFilesToSolution(string solution, string projectName, string[] files)
+    private static void CloseVisualStudio_Internal()
+    {
+        CallOnSTAThread(() =>
+        {
+            if (_vsInstance?.Solution.IsOpen == true)
+            {
+                _vsInstance.ExecuteCommand("File.SaveAll");
+                _vsInstance.Solution.Close(true);
+            }
+
+            _vsInstance?.Quit();
+            _vsInstance = null;
+        });
+    }
+
+    public static void CloseVisualStudio()
+    {
+        lock(_lock) { CloseVisualStudio_Internal(); }
+    }
+
+    private static bool AddFilesToSolution_Internal(string solution, string projectName, string[] files)
     {
         Debug.Assert(files?.Length > 0);
-        OpenVisualStudio(solution);
+        
+        OpenVisualStudio_Internal(solution);
+
         try
         {
             if (_vsInstance != null)
             {
-                if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
-                else _vsInstance.ExecuteCommand("File.SaveAll");
-
-                foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
+                CallOnSTAThread(() =>
                 {
-                    if (!project.UniqueName.Contains(projectName)) continue;
+                    if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
+                    else _vsInstance.ExecuteCommand("File.SaveAll");
 
-                    foreach (var file in files)
+                    foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
                     {
-                        try
+                        if (!project.UniqueName.Contains(projectName)) continue;
+
+                        foreach (var file in files)
                         {
                             project.ProjectItems.AddFromFile(file);
                         }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(ex.Message);
-                            Debug.WriteLine("failed to add files to Visual Studio project");
-
-                            return false;
-                        }
                     }
-                }
 
-                var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
-                
-                if (!string.IsNullOrEmpty(cpp))
-                {
-                    _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
-                }
-                
-                _vsInstance.MainWindow.Activate();
-                _vsInstance.MainWindow.Visible = true;
+                    var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
+
+                    if (!string.IsNullOrEmpty(cpp))
+                    {
+                        _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
+                    }
+
+                    _vsInstance.MainWindow.Activate();
+                    _vsInstance.MainWindow.Visible = true;
+                });
             }
         }
         catch (Exception ex)
@@ -167,107 +200,189 @@ public static class VisualStudio
         return true;
     }
 
-    public static bool IsDebugging()
+    public static bool AddFilesToSolution(string solution, string projectName, string[] files)
     {
-        var result = false;
-        var tryAgain = true;
+        lock(_lock) { return AddFilesToSolution_Internal(solution, projectName, files); }
+    }
 
-        for (var i = 0; i < 3 && tryAgain; ++i)
+    private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig)
+    {
+        if (BuildDone) return;
+
+        Logger.Log(MessageType.Info, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
+    }
+
+    private static void OnBuildSolutionDone(string project, string projectConfig, string platform, string solutionConfig, bool success)
+    {
+        if (BuildDone) return;
+
+        if (success) Logger.Log(MessageType.Info, $"Building {projectConfig} configuration succeeded.");
+        else Logger.Log(MessageType.Error, $"Building {projectConfig} configuration failed.");
+
+        BuildDone = true;
+        BuildSucceeded = success;
+
+        _resetEvent.Set();
+    }
+
+    private static bool IsDebugging_Internal()
+    {
+        bool result = false;
+
+        CallOnSTAThread(() =>
         {
-            try
-            {
-                result = _vsInstance != null &&
-                         (_vsInstance.Debugger.CurrentProgram != null ||
-                          _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
-
-                tryAgain = false;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-
-                System.Threading.Thread.Sleep(1000);
-            }
-        }
+            result = _vsInstance != null && (_vsInstance.Debugger.CurrentProgram != null || _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
+        });
 
         return result;
     }
 
-    internal static void BuildSolution(Project project, string configName, bool showWindow = true)
+    public static bool IsDebugging()
     {
-        if (IsDebugging())
+        lock(_lock) { return IsDebugging_Internal(); }
+    }
+
+    private static void BuildSolution_Internal(Project project, BuildConfiguration buildConfig, bool showWindow = true)
+    {
+        if (IsDebugging_Internal())
         {
             Logger.Log(MessageType.Error, "Visual Studio is currently debugging.");
 
             return;
         }
 
-        OpenVisualStudio(project.Solution);
+        OpenVisualStudio_Internal(project.Solution);
 
         BuildSucceeded = false;
-        BuildFinished = false;
+        BuildDone = false;
 
-        for (var i = 0; i < 3 && !BuildFinished; ++i)
+        CallOnSTAThread(() =>
         {
-            try
+            if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
+
+            _vsInstance.MainWindow.Visible = showWindow;
+
+            _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildSolutionBegin;
+            _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildSolutionDone;
+        });
+
+        var configName = GetConfigurationName(buildConfig);
+
+        try
+        {
+            foreach (var pdbFile in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), ".pdb"))
             {
-                if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
-
-                _vsInstance.MainWindow.Visible = showWindow;
-
-                _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildProjConfigBegin;
-                _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildProjConfigDone;
-
-                try
-                {
-                    foreach (var pdbFile in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), ".pdb"))
-                    {
-                        File.Delete(pdbFile);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                }
-
-                _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
-                _vsInstance.ExecuteCommand("Build.BuildSolution");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Debug.WriteLine($"Attempt {i}: failed to build project {project.Name}.");
-
-                System.Threading.Thread.Sleep(1000);
+                File.Delete(pdbFile);
             }
         }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+        }
+
+        CallOnSTAThread(() =>
+        {
+            _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
+            _vsInstance.ExecuteCommand("Build.BuildSolution");
+            _resetEvent.Wait();
+            _resetEvent.Reset();
+        });
     }
 
-    private static void OnBuildProjConfigDone(string project, string projectConfig, string platform, string solutionConfig, bool success)
+    public static void BuildSolution(Project project, BuildConfiguration buildConfig, bool showWindow = true)
     {
-        if (BuildFinished) return;
-
-        if (success) Logger.Log(MessageType.Info, $"Building {projectConfig} configuration succeed.");
-        else Logger.Log(MessageType.Error, $"Building {projectConfig} configuration failed.");
-
-        BuildFinished = true;
-        BuildSucceeded = success;
+        lock(_lock) { BuildSolution_Internal(project, buildConfig, showWindow); }
     }
 
-    private static void OnBuildProjConfigBegin(string project, string projectConfig, string platform, string solutionConfig)
+    private static void Run_Internal(Project project, BuildConfiguration buildConfig, bool debug)
     {
-        Logger.Log(MessageType.Info, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
+        CallOnSTAThread(() =>
+        {
+            if (_vsInstance != null && !IsDebugging_Internal() && BuildSucceeded)
+                _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+        });
     }
 
-    public static void Run(Project project, string configName, bool debug)
+    public static void Run(Project project, BuildConfiguration buildConfig, bool debug)
     {
-        if (_vsInstance != null && !IsDebugging() && BuildFinished && BuildSucceeded)
-            _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+        lock(_lock) { Run_Internal(project, buildConfig, debug); }
     }
 
+    private static void Stop_Internal()
+    {
+        CallOnSTAThread(() => 
+        {
+            if (_vsInstance != null && IsDebugging_Internal())
+                _vsInstance.ExecuteCommand("Debug.StopDebugging");
+        });
+    }
     public static void Stop()
     {
-        if (_vsInstance != null && IsDebugging())
-            _vsInstance.ExecuteCommand("Debug.StopDebugging");
+        lock(_lock) { Stop_Internal(); }
     }
+}
+
+public class MessageFilter : IOleMessageFilter
+{
+    private const int SERVERCALL_ISHANDLED = 0;
+    private const int PENDINGMSG_WAITDEFPROCESS = 2;
+    private const int SERVERCALL_RETRYLATER = 2;
+
+    [DllImport("Ole32.dll")]
+    private static extern int CoRegisterMessageFilter(IOleMessageFilter newFilter, out IOleMessageFilter oldFilter);
+
+    public static void Register()
+    {
+        IOleMessageFilter newFilter = new MessageFilter();
+
+        int hr = CoRegisterMessageFilter(newFilter, out var oldFilter);
+
+        Debug.Assert(hr >= 0, "Registering COM IMessageFilter failed.");
+    }
+
+
+    public static void Revoke()
+    {
+        int hr = CoRegisterMessageFilter(null, out var oldFilter);
+
+        Debug.Assert(hr >= 0, "Unregistering COM IMessageFilter failed.");
+    }
+
+
+    int IOleMessageFilter.HandleInComingCall(int dwCallType, System.IntPtr hTaskCaller, int dwTickCount, System.IntPtr lpInterfaceInfo)
+    {
+        return SERVERCALL_ISHANDLED;
+    }
+
+
+    int IOleMessageFilter.RetryRejectedCall(System.IntPtr hTaskCallee, int dwTickCount, int dwRejectType)
+    {
+        if (dwRejectType == SERVERCALL_RETRYLATER)
+        {
+            Debug.WriteLine("COM server is busy. Retrying call to EnvDTE interface.");
+            
+            return 500;
+        }
+
+        return -1;
+    }
+
+
+    int IOleMessageFilter.MessagePending(System.IntPtr hTaskCallee, int dwTickCount, int dwPendingType)
+    {
+        return PENDINGMSG_WAITDEFPROCESS;
+    }
+}
+
+[ComImport(), Guid("00000016-0000-0000-C000-000000000046"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+interface IOleMessageFilter
+{
+    [PreserveSig]
+    int HandleInComingCall(int dwCallType, IntPtr hTaskCaller, int dwTickCount, IntPtr lpInterfaceInfo);
+
+    [PreserveSig]
+    int RetryRejectedCall(IntPtr hTaskCallee, int dwTickCount, int dwRejectType);
+
+    [PreserveSig]
+    int MessagePending(IntPtr hTaskCallee, int dwTickCount, int dwPendingType);
 }

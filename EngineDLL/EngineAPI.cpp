@@ -31,7 +31,7 @@ namespace
 	utl::vector<graphics::render_surface> surfaces;
 }
 
-EDITOR_INTERFACE u32 LoadGameCodeDll(const char* dll_path)
+EDITOR_INTERFACE u32 LoadGameCodeDLL(const char* dll_path)
 {
 	if (game_code_dll) return 0;
 
@@ -45,7 +45,7 @@ EDITOR_INTERFACE u32 LoadGameCodeDll(const char* dll_path)
 	return (game_code_dll && get_script_creator && get_script_names) ? TRUE : FALSE;
 }
 
-EDITOR_INTERFACE u32 UnloadGameCodeDll()
+EDITOR_INTERFACE u32 UnloadGameCodeDLL()
 {
 	if (!game_code_dll) return FALSE;
 

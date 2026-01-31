@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 	<OutputType>WinExe</OutputType>
-	<TargetFramework>net7.0-windows</TargetFramework>
+	<TargetFramework>net8.0-windows7.0</TargetFramework>
 	<UseWPF>true</UseWPF>
 	  <XamlDebuggingInformation>True</XamlDebuggingInformation>
 	  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -34,24 +34,18 @@
   </ItemGroup>
 
   <ItemGroup>
-	<COMReference Include="EnvDTE">
-	  <WrapperTool>tlbimp</WrapperTool>
-	  <VersionMinor>0</VersionMinor>
-	  <VersionMajor>8</VersionMajor>
-	  <Guid>80cc9f66-e7d8-4ddd-85b6-d9e6cd0e93e2</Guid>
-	  <Lcid>0</Lcid>
-	  <Isolated>false</Isolated>
-	  <EmbedInteropTypes>False</EmbedInteropTypes>
-	</COMReference>
-	<COMReference Include="EnvDTE80">
-	  <WrapperTool>tlbimp</WrapperTool>
-	  <VersionMinor>0</VersionMinor>
-	  <VersionMajor>8</VersionMajor>
-	  <Guid>1a31287a-4d7d-413e-8e32-3b374931bd89</Guid>
-	  <Lcid>0</Lcid>
-	  <Isolated>false</Isolated>
-	  <EmbedInteropTypes>False</EmbedInteropTypes>
-	</COMReference>
+    <COMReference Include="{1a31287a-4d7d-413e-8e32-3b374931bd89}">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>8</VersionMajor>
+      <Guid>1a31287a-4d7d-413e-8e32-3b374931bd89</Guid>
+    </COMReference>
+    <COMReference Include="{80cc9f66-e7d8-4ddd-85b6-d9e6cd0e93e2}">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>8</VersionMajor>
+      <Guid>80cc9f66-e7d8-4ddd-85b6-d9e6cd0e93e2</Guid>
+    </COMReference>
   </ItemGroup>
 
   <ItemGroup>

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -56,9 +57,11 @@ namespace {1} {{
 
         private static string GetNamespaceFromProjectName()
         {
-            var projectName = Project.Current.Name;
+            var projectName = Project.Current.Name.Trim();
 
-            projectName = projectName.Replace(" ", "_");
+            if (string.IsNullOrEmpty(projectName)) return string.Empty;
+
+            projectName = Regex.Replace(projectName, @"^[A-Za-z_][A-za-z0-9_]*", "");
 
             return projectName;
         }
@@ -81,15 +84,19 @@ namespace {1} {{
 
             var errorMessage = string.Empty;
 
+            var nameRegex = new Regex(@"^[A-Za-z_][A-za-z0-9_]*");
+
             if (string.IsNullOrEmpty(name))
                 errorMessage = "Type in a script name.";
+            else if (!nameRegex.IsMatch(name))
+                errorMessage = "Invalid character(s) use in script name.";
+            else if (string.IsNullOrEmpty(path))
+                errorMessage = "Select a valid script folder.";
+            else if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+                errorMessage = "Invalid characters(s) used in the script path.";
+
             else if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1 || name.Any(char.IsWhiteSpace))
                 errorMessage = "Invalid character(s) used in script name.";
-
-            else if (string.IsNullOrEmpty(path))
-                errorMessage = "Type in a path.";
-            else if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1 || path.Any(char.IsWhiteSpace))
-                errorMessage = "Invalid character(s) used in path.";
             else if (!Path.GetFullPath(Path.Combine(Project.Current.Path, path))
                          .Contains(Path.Combine(Project.Current.Path, @"GameCode\")))
                 errorMessage = "Script must be added to (a sub-folder of) GameCode.";

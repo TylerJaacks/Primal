@@ -55,9 +55,27 @@ namespace PrimalEditor
 
         private void OnMainWindowClosing(object sender, CancelEventArgs e)
         {
-            Closing -= OnMainWindowClosing;
+            if (DataContext == null)
+            {
+                e.Cancel = true;
 
-            Project.Current?.Unload();
+                Application.Current.MainWindow.Hide();
+
+                OpenProjectBrowserDialog();
+
+                if (DataContext != null)
+                {
+                    Application.Current.MainWindow.Show();
+                }
+            }
+            else
+            {
+                Closing -= OnMainWindowClosing;
+
+                Project.Current?.Unload();
+
+                DataContext = null;
+            }
         }
 
         private void OpenProjectBrowserDialog()

@@ -90,6 +90,7 @@ namespace primal::utl {
 		[[nodiscard]]
 		constexpr T& operator[](u32 id)
 		{
+			// TODO: Error when closing the Editor.
 			assert(id < _array.size() && !already_removed(id));
 
 			return _array[id];
