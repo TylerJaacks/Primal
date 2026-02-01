@@ -155,7 +155,7 @@ public partial class PrimitiveMeshDialog : Window
     {
         var dlg = new SaveFileDialog()
         {
-            InitialDirectory = Project.Current.Content,
+            InitialDirectory = Project.Current.ContentPath,
             Filter = "Asset file (*.asset)|*.asset"
         };
 

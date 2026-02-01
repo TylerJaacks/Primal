@@ -10,7 +10,7 @@ using PrimalEditor.Utilities;
 namespace PrimalEditor.ContentToolsAPIStructs
 {
     [StructLayout(LayoutKind.Sequential)]
-    public class GeometryImportSettings
+    class GeometryImportSettings
     {
         public float SmoothingAngle = 178f;
         public byte CalculateNormals = 0;

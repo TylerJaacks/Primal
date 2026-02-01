@@ -31,7 +31,7 @@ namespace PrimalEditor.GameProject
 
         public string Solution => $@"{Path}{Name}.sln";
 
-        public string Content => $@"{Path}Content";
+        public string ContentPath => $@"{Path}Content";
 
         private int _buildConfig;
 

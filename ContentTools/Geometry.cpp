@@ -62,11 +62,9 @@ namespace primal::tools
 
 				for (u32 j{ 0 }; j < num_refs; ++j)
 				{
-					m.indices[refs[j]] = static_cast<u32>(m.vertices.size());
-
-					auto& [tangent, position, normal, uv] { m.vertices.emplace_back() };
-
-					position = m.positions[m.raw_indices[refs[j]]];
+					m.indices[refs[j]] = (u32)m.vertices.size();
+					vertex& v{ m.vertices.emplace_back() };
+					v.position = m.positions[m.raw_indices[refs[j]]];
 
 					XMVECTOR n1{ XMLoadFloat3(&m.normals[refs[j]]) };
 
@@ -95,7 +93,7 @@ namespace primal::tools
 						}
 					}
 
-					XMStoreFloat3(&normal, XMVector3Normalize(n1));
+					XMStoreFloat3(&v.normal, XMVector3Normalize(n1));
 				}
 			}
 		}

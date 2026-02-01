@@ -55,6 +55,7 @@
     <ClInclude Include="Graphics\Direct3D12\D3D12Shaders.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12GPass.h" />
     <ClInclude Include="Graphics\Direct3D12\D3D12PostProcessing.h" />
+    <ClInclude Include="Platform\IncludeWindowCpp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\Entity.cpp">
@@ -71,7 +72,7 @@
     </ClCompile>
     <ClCompile Include="Core\Engine.cpp" />
     <ClCompile Include="Content\ContentLoader.cpp" />
-    <ClCompile Include="Platform\Platform.cpp" />
+    <ClCompile Include="Platform\PlatformWin32.cpp" />
     <ClCompile Include="Graphics\Renderer.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Interface.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12Core.cpp" />
@@ -81,6 +82,7 @@
     <ClCompile Include="Graphics\Direct3D12\D3D12Shaders.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12GPass.cpp" />
     <ClCompile Include="Graphics\Direct3D12\D3D12PostProcessing.cpp" />
+    <ClCompile Include="Platform\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Common">

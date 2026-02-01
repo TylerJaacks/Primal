@@ -1,83 +1,84 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Threading;
 
-namespace PrimalEditor.Utilities
+namespace PrimalEditor.Utilities;
+
+public static class ID
 {
-    // ReSharper disable once InconsistentNaming
-    public static class ID
+    public static int INVALID_ID => -1;
+    public static bool IsValid(int id) => id != INVALID_ID;
+}
+
+public static class MathUtil
+{
+    public static float Epsilon => 0.00001f;
+
+    public static bool IsTheSameAs(this float value, float other)
     {
-        // ReSharper disable once InconsistentNaming
-        public static int INVALID_ID => -1;
-        public static bool IsValid(int id) => id != INVALID_ID;
+        return Math.Abs(value - other) < Epsilon;
     }
 
-    public static class MathUtil
+    public static bool IsTheSameAs(this float? value, float? other)
     {
-        public static float Epsilon => 0.00001f;
+        if (!value.HasValue || !other.HasValue) return false;
+        return Math.Abs(value.Value - other.Value) < Epsilon;
+    }
+}
 
-        public static bool IsTheSameAs(this float value, float other)
-        {
-            return Math.Abs(value - other) < Epsilon;
-        }
+internal class DelayEventTimerArgs : EventArgs
+{
+    public bool RepeatEvent { get; set; }
+    public IEnumerable<object> Data { get; set; }
 
-        public static bool IsTheSameAs(this float? value, float? other)
-        {
-            if (!value.HasValue || !other.HasValue) return false;
-            return Math.Abs(value.Value - other.Value) < Epsilon;
-        }
+    public DelayEventTimerArgs(IEnumerable<object> data)
+    {
+        Data = data;
+    }
+}
+
+internal class DelayEventTimer
+{
+    private readonly DispatcherTimer _timer;
+    private readonly TimeSpan _delay;
+    private DateTime _lastEventTime = DateTime.Now;
+    private readonly List<object> _data = new List<object>();
+
+    public event EventHandler<DelayEventTimerArgs> Triggered;
+
+    public void Trigger(object data = null)
+    {
+        if (data != null) _data.Add(data);
+
+        _lastEventTime = DateTime.Now;
+        _timer.IsEnabled = true;
+    }
+    public void Disable()
+    {
+        _timer.IsEnabled = false;
     }
 
-    internal class DelayEventTimerArgs : EventArgs
+    private void OnTimerTick(object sender, EventArgs e)
     {
-        public bool RepeatEvent { get; set; }
-        public object Data { get; set; }
+        if ((DateTime.Now - _lastEventTime) < _delay) return;
 
-        public DelayEventTimerArgs(object data)
-        {
-            Data = data;
-        }
+        var eventArgs = new DelayEventTimerArgs(_data);
+
+        Triggered?.Invoke(this, eventArgs);
+
+        if (!eventArgs.RepeatEvent) _data.Clear();
+
+        _timer.IsEnabled = eventArgs.RepeatEvent;
     }
 
-    internal class DelayEventTimer
+    public DelayEventTimer(TimeSpan delay, DispatcherPriority priority = DispatcherPriority.Normal)
     {
-        private readonly DispatcherTimer _timer;
-        private readonly TimeSpan _delay;
-        private DateTime _lastEventTime = DateTime.Now;
-        private object _data;
-
-        public event EventHandler<DelayEventTimerArgs> Triggered;
-
-        public void Trigger(object data = null)
+        _delay = delay;
+        _timer = new DispatcherTimer(priority)
         {
-            _data = data;
-            _lastEventTime = DateTime.Now;
-            _timer.IsEnabled = true;
-        }
-        public void Disable()
-        {
-            _timer.IsEnabled = false;
-        }
+            Interval = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 0.5),
+        };
 
-        private void OnTimerTick(object sender, EventArgs e)
-        {
-            if ((DateTime.Now - _lastEventTime) < _delay) return;
-
-            var eventArgs = new DelayEventTimerArgs(_data);
-
-            Triggered?.Invoke(this, eventArgs);
-
-            _timer.IsEnabled = eventArgs.RepeatEvent;
-        }
-
-        public DelayEventTimer(TimeSpan delay, DispatcherPriority priority = DispatcherPriority.Normal)
-        {
-            _delay = delay;
-            _timer = new DispatcherTimer(priority)
-            {
-                Interval = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 0.5),
-            };
-
-            _timer.Tick += OnTimerTick;
-        }
+        _timer.Tick += OnTimerTick;
     }
 }

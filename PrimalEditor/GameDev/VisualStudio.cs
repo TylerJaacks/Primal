@@ -43,13 +43,22 @@ public static class VisualStudio
     private static void CallOnSTAThread(Action action)
     {
         var thread = new System.Threading.Thread(() =>
-        {
-            MessageFilter.Register();
+                                                 {
+                                                     MessageFilter.Register();
 
-            try { action(); }
-            catch(Exception ex) { Logger.Log(MessageType.Warning, ex.Message); }
-            finally { MessageFilter.Revoke();  }
-        });
+                                                     try
+                                                     {
+                                                         action();
+                                                     }
+                                                     catch (Exception ex)
+                                                     {
+                                                         Logger.Log(MessageType.Warning, ex.Message);
+                                                     }
+                                                     finally
+                                                     {
+                                                         MessageFilter.Revoke();
+                                                     }
+                                                 });
 
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
@@ -64,18 +73,21 @@ public static class VisualStudio
 
         try
         {
-            if (_vsInstance != null) return;
+            if (_vsInstance != null)
+                return;
 
             var hResult = GetRunningObjectTable(0, out runningObjectTable);
 
-            if (hResult < 0 || runningObjectTable == null) throw new COMException($"GetRunningObjectTable() returned HRESULT: {hResult:X8}");
+            if (hResult < 0 || runningObjectTable == null)
+                throw new COMException($"GetRunningObjectTable() returned HRESULT: {hResult:X8}");
 
             runningObjectTable.EnumRunning(out monikerTable);
             monikerTable.Reset();
 
             hResult = CreateBindCtx(0, out bindCtx);
 
-            if (hResult < 0 || bindCtx == null) throw new COMException($"CreateBindCtx() returned HRESULT: {hResult:X8}");
+            if (hResult < 0 || bindCtx == null)
+                throw new COMException($"CreateBindCtx() returned HRESULT: {hResult:X8}");
 
             var currentMoniker = new IMoniker[1];
 
@@ -85,20 +97,20 @@ public static class VisualStudio
 
                 currentMoniker[0]?.GetDisplayName(bindCtx, null, out name);
 
-                if (!name.Contains(_programId)) continue;
+                if (!name.Contains(_programId))
+                    continue;
 
                 hResult = runningObjectTable.GetObject(currentMoniker[0], out var obj);
-                        
-                if (hResult < 0 || obj == null) throw new COMException($"Running object table's GetObject() returned HRESULT: {hResult:X8}");
+
+                if (hResult < 0 || obj == null)
+                    throw new COMException($"Running object table's GetObject() returned HRESULT: {hResult:X8}");
 
                 var dte = obj as EnvDTE80.DTE2;
 
                 var solutionName = string.Empty;
 
                 CallOnSTAThread(() =>
-                {
-                    solutionName = dte.Solution.FullName;
-                });
+                                { solutionName = dte.Solution.FullName; });
 
                 if (solutionName == solutionPath)
                 {
@@ -107,7 +119,8 @@ public static class VisualStudio
                 }
             }
 
-            if (_vsInstance != null) return;
+            if (_vsInstance != null)
+                return;
 
             var visualStudioType = Type.GetTypeFromProgID(_programId, true);
 
@@ -122,72 +135,86 @@ public static class VisualStudio
         }
         finally
         {
-            if (monikerTable != null) Marshal.ReleaseComObject(monikerTable);
-            if (runningObjectTable != null) Marshal.ReleaseComObject(runningObjectTable);
-            if (bindCtx != null) Marshal.ReleaseComObject(bindCtx);
+            if (monikerTable != null)
+                Marshal.ReleaseComObject(monikerTable);
+            if (runningObjectTable != null)
+                Marshal.ReleaseComObject(runningObjectTable);
+            if (bindCtx != null)
+                Marshal.ReleaseComObject(bindCtx);
         }
     }
 
     public static void OpenVisualStudion(string solutionPath)
     {
-        lock(_lock) { OpenVisualStudio_Internal(solutionPath); }
+        lock (_lock)
+        {
+            OpenVisualStudio_Internal(solutionPath);
+        }
     }
 
     private static void CloseVisualStudio_Internal()
     {
         CallOnSTAThread(() =>
-        {
-            if (_vsInstance?.Solution.IsOpen == true)
-            {
-                _vsInstance.ExecuteCommand("File.SaveAll");
-                _vsInstance.Solution.Close(true);
-            }
+                        {
+                            if (_vsInstance?.Solution.IsOpen == true)
+                            {
+                                _vsInstance.ExecuteCommand("File.SaveAll");
+                                _vsInstance.Solution.Close(true);
+                            }
 
-            _vsInstance?.Quit();
-            _vsInstance = null;
-        });
+                            _vsInstance?.Quit();
+                            _vsInstance = null;
+                        });
     }
 
     public static void CloseVisualStudio()
     {
-        lock(_lock) { CloseVisualStudio_Internal(); }
+        lock (_lock)
+        {
+            CloseVisualStudio_Internal();
+        }
     }
 
     private static bool AddFilesToSolution_Internal(string solution, string projectName, string[] files)
     {
         Debug.Assert(files?.Length > 0);
-        
+
         OpenVisualStudio_Internal(solution);
 
         try
         {
             if (_vsInstance != null)
             {
-                CallOnSTAThread(() =>
-                {
-                    if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
-                    else _vsInstance.ExecuteCommand("File.SaveAll");
-
-                    foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
+                CallOnSTAThread(
+                    () =>
                     {
-                        if (!project.UniqueName.Contains(projectName)) continue;
+                        if (!_vsInstance.Solution.IsOpen)
+                            _vsInstance.Solution.Open(solution);
+                        else
+                            _vsInstance.ExecuteCommand("File.SaveAll");
 
-                        foreach (var file in files)
+                        foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
                         {
-                            project.ProjectItems.AddFromFile(file);
+                            if (!project.UniqueName.Contains(projectName))
+                                continue;
+
+                            foreach (var file in files)
+                            {
+                                project.ProjectItems.AddFromFile(file);
+                            }
                         }
-                    }
 
-                    var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
+                        var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
 
-                    if (!string.IsNullOrEmpty(cpp))
-                    {
-                        _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
-                    }
+                        if (!string.IsNullOrEmpty(cpp))
+                        {
+                            _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible =
+                                true;
+                        }
 
-                    _vsInstance.MainWindow.Activate();
-                    _vsInstance.MainWindow.Visible = true;
-                });
+                        _vsInstance.MainWindow.Activate();
+                        _vsInstance.MainWindow.Visible = true;
+                    });
             }
         }
         catch (Exception ex)
@@ -202,22 +229,31 @@ public static class VisualStudio
 
     public static bool AddFilesToSolution(string solution, string projectName, string[] files)
     {
-        lock(_lock) { return AddFilesToSolution_Internal(solution, projectName, files); }
+        lock (_lock)
+        {
+            return AddFilesToSolution_Internal(solution, projectName, files);
+        }
     }
 
-    private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig)
+    private static void OnBuildSolutionBegin(string project, string projectConfig, string platform,
+                                             string solutionConfig)
     {
-        if (BuildDone) return;
+        if (BuildDone)
+            return;
 
         Logger.Log(MessageType.Info, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
     }
 
-    private static void OnBuildSolutionDone(string project, string projectConfig, string platform, string solutionConfig, bool success)
+    private static void OnBuildSolutionDone(string project, string projectConfig, string platform,
+                                            string solutionConfig, bool success)
     {
-        if (BuildDone) return;
+        if (BuildDone)
+            return;
 
-        if (success) Logger.Log(MessageType.Info, $"Building {projectConfig} configuration succeeded.");
-        else Logger.Log(MessageType.Error, $"Building {projectConfig} configuration failed.");
+        if (success)
+            Logger.Log(MessageType.Info, $"Building {projectConfig} configuration succeeded.");
+        else
+            Logger.Log(MessageType.Error, $"Building {projectConfig} configuration failed.");
 
         BuildDone = true;
         BuildSucceeded = success;
@@ -230,16 +266,21 @@ public static class VisualStudio
         bool result = false;
 
         CallOnSTAThread(() =>
-        {
-            result = _vsInstance != null && (_vsInstance.Debugger.CurrentProgram != null || _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
-        });
+                        {
+                            result = _vsInstance != null &&
+                                     (_vsInstance.Debugger.CurrentProgram != null ||
+                                      _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
+                        });
 
         return result;
     }
 
     public static bool IsDebugging()
     {
-        lock(_lock) { return IsDebugging_Internal(); }
+        lock (_lock)
+        {
+            return IsDebugging_Internal();
+        }
     }
 
     private static void BuildSolution_Internal(Project project, BuildConfiguration buildConfig, bool showWindow = true)
@@ -257,14 +298,15 @@ public static class VisualStudio
         BuildDone = false;
 
         CallOnSTAThread(() =>
-        {
-            if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
+                        {
+                            if (!_vsInstance.Solution.IsOpen)
+                                _vsInstance.Solution.Open(project.Solution);
 
-            _vsInstance.MainWindow.Visible = showWindow;
+                            _vsInstance.MainWindow.Visible = showWindow;
 
-            _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildSolutionBegin;
-            _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildSolutionDone;
-        });
+                            _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildSolutionBegin;
+                            _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildSolutionDone;
+                        });
 
         var configName = GetConfigurationName(buildConfig);
 
@@ -281,65 +323,73 @@ public static class VisualStudio
         }
 
         CallOnSTAThread(() =>
-        {
-            _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
-            _vsInstance.ExecuteCommand("Build.BuildSolution");
-            _resetEvent.Wait();
-            _resetEvent.Reset();
-        });
+                        {
+                            _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
+                            _vsInstance.ExecuteCommand("Build.BuildSolution");
+                            _resetEvent.Wait();
+                            _resetEvent.Reset();
+                        });
     }
 
     public static void BuildSolution(Project project, BuildConfiguration buildConfig, bool showWindow = true)
     {
-        lock(_lock) { BuildSolution_Internal(project, buildConfig, showWindow); }
+        lock (_lock)
+        {
+            BuildSolution_Internal(project, buildConfig, showWindow);
+        }
     }
 
     private static void Run_Internal(Project project, BuildConfiguration buildConfig, bool debug)
     {
         CallOnSTAThread(() =>
-        {
-            if (_vsInstance != null && !IsDebugging_Internal() && BuildSucceeded)
-                _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
-        });
+                        {
+                            if (_vsInstance != null && !IsDebugging_Internal() && BuildSucceeded)
+                                _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+                        });
     }
 
     public static void Run(Project project, BuildConfiguration buildConfig, bool debug)
     {
-        lock(_lock) { Run_Internal(project, buildConfig, debug); }
+        lock (_lock)
+        {
+            Run_Internal(project, buildConfig, debug);
+        }
     }
 
     private static void Stop_Internal()
     {
-        CallOnSTAThread(() => 
-        {
-            if (_vsInstance != null && IsDebugging_Internal())
-                _vsInstance.ExecuteCommand("Debug.StopDebugging");
-        });
+        CallOnSTAThread(() =>
+                        {
+                            if (_vsInstance != null && IsDebugging_Internal())
+                                _vsInstance.ExecuteCommand("Debug.StopDebugging");
+                        });
     }
     public static void Stop()
     {
-        lock(_lock) { Stop_Internal(); }
+        lock (_lock)
+        {
+            Stop_Internal();
+        }
     }
 }
 
-public class MessageFilter : IOleMessageFilter
+public class MessageFilter : IMessageFilter
 {
     private const int SERVERCALL_ISHANDLED = 0;
     private const int PENDINGMSG_WAITDEFPROCESS = 2;
     private const int SERVERCALL_RETRYLATER = 2;
 
     [DllImport("Ole32.dll")]
-    private static extern int CoRegisterMessageFilter(IOleMessageFilter newFilter, out IOleMessageFilter oldFilter);
+    private static extern int CoRegisterMessageFilter(IMessageFilter newFilter, out IMessageFilter oldFilter);
 
     public static void Register()
     {
-        IOleMessageFilter newFilter = new MessageFilter();
+        IMessageFilter newFilter = new MessageFilter();
 
         int hr = CoRegisterMessageFilter(newFilter, out var oldFilter);
 
         Debug.Assert(hr >= 0, "Registering COM IMessageFilter failed.");
     }
-
 
     public static void Revoke()
     {
@@ -348,34 +398,33 @@ public class MessageFilter : IOleMessageFilter
         Debug.Assert(hr >= 0, "Unregistering COM IMessageFilter failed.");
     }
 
-
-    int IOleMessageFilter.HandleInComingCall(int dwCallType, System.IntPtr hTaskCaller, int dwTickCount, System.IntPtr lpInterfaceInfo)
+    int IMessageFilter.HandleInComingCall(int dwCallType, System.IntPtr hTaskCaller, int dwTickCount,
+                                          System.IntPtr lpInterfaceInfo)
     {
         return SERVERCALL_ISHANDLED;
     }
 
-
-    int IOleMessageFilter.RetryRejectedCall(System.IntPtr hTaskCallee, int dwTickCount, int dwRejectType)
+    int IMessageFilter.RetryRejectedCall(System.IntPtr hTaskCallee, int dwTickCount, int dwRejectType)
     {
         if (dwRejectType == SERVERCALL_RETRYLATER)
         {
             Debug.WriteLine("COM server is busy. Retrying call to EnvDTE interface.");
-            
+
             return 500;
         }
 
         return -1;
     }
 
-
-    int IOleMessageFilter.MessagePending(System.IntPtr hTaskCallee, int dwTickCount, int dwPendingType)
+    int IMessageFilter.MessagePending(System.IntPtr hTaskCallee, int dwTickCount, int dwPendingType)
     {
         return PENDINGMSG_WAITDEFPROCESS;
     }
 }
 
-[ComImport(), Guid("00000016-0000-0000-C000-000000000046"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-interface IOleMessageFilter
+[ComImport(), Guid("00000016-0000-0000-C000-000000000046"),
+ InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+interface IMessageFilter
 {
     [PreserveSig]
     int HandleInComingCall(int dwCallType, IntPtr hTaskCaller, int dwTickCount, IntPtr lpInterfaceInfo);

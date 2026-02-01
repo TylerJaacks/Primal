@@ -270,7 +270,7 @@ public class GeometryImportSettings : ViewModelBase
     }
 }
 
-public class Geometry : Asset
+class Geometry : Asset
 {
     private readonly List<LODGroup> _lodGroup = new();
 
