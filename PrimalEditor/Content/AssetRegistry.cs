@@ -44,7 +44,6 @@ static class AssetRegistry
             else
             {
                 RegisterAsset(eventArgs.FullPath);
-
                 if (eventArgs.ChangeType == WatcherChangeTypes.Renamed)
                 {
                     _assetDictionary.Keys.Where(key => !File.Exists(key)).ToList().ForEach(file => UnregisterAsset(file));
@@ -71,29 +70,25 @@ static class AssetRegistry
 
     private static void RegisterAsset(string file)
     {
+        Debug.Assert(File.Exists(file));
         try
         {
             var fileInfo = new FileInfo(file);
 
-            if (!_assetDictionary.ContainsKey(file) || _assetDictionary[file].RegisterTime.IsOlder(fileInfo.LastWriteTime))
+            if (!_assetDictionary.ContainsKey(file) ||
+                _assetDictionary[file].RegisterTime.IsOlder(fileInfo.LastWriteTime))
             {
                 var info = Asset.GetAssetInfo(file);
-
-                Debug.Assert(file != null);
-
+                Debug.Assert(info != null);
+                // TODO: Exception here when creating a new Asset.
                 info.RegisterTime = DateTime.Now;
-
                 _assetDictionary[file] = info;
 
                 Debug.Assert(_assetDictionary.ContainsKey(file));
-
                 _assets.Add(_assetDictionary[file]);
             }
         }
-        catch(Exception ex)
-        {
-            Debug.WriteLine(ex.Message);
-        }
+        catch (Exception ex) { Debug.WriteLine(ex.Message); }
     }
 
     private static void RegisterAllAssets(string path)
@@ -127,7 +122,7 @@ static class AssetRegistry
 
     public static AssetInfo GetAssetInfo(string file) => _assetDictionary.ContainsKey(file) ? _assetDictionary[file] : null;
 
-    public static AssetInfo GetAssetInfo(Guid guid) => _assetDictionary.FirstOrDefault(x => x.Guid == guid);
+    public static AssetInfo GetAssetInfo(Guid guid) => _assets.FirstOrDefault(x => x.Guid == guid);
 
     static AssetRegistry()
     {
