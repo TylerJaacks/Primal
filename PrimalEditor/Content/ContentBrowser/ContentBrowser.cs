@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace PrimalEditor.Content.ContentBrowser;
+namespace PrimalEditor.Content;
 
 sealed class ContentInfo
 {
@@ -21,7 +21,7 @@ sealed class ContentInfo
     public string FullPath { get; set; }
     public string FileName => Path.GetFileNameWithoutExtension(FullPath);
     public bool IsDirectory { get; }
-    public DateTime DatedModified { get; }
+    public DateTime DateModified { get; }
     public long? Size { get; }
 
     public ContentInfo(string fullPath, byte[] icon = null, byte[] smallIcon = null, DateTime? lastModified = null, long? size = null)
@@ -31,7 +31,7 @@ sealed class ContentInfo
         var info = new FileInfo(fullPath);
 
         IsDirectory = ContentHelper.IsDirectory(fullPath);
-        DatedModified = lastModified ?? info.LastWriteTime;
+        DateModified = lastModified ?? info.LastWriteTime;
         Size = IsDirectory ? (long?) null : info.Length;
         Icon = icon;
         IconSmall = smallIcon ?? icon;
@@ -113,7 +113,7 @@ class ContentBrowser : ViewModelBase, IDisposable
                 {
                     var fileInfo = new FileInfo(file);
 
-                    if (!_contentInfoCache.ContainsKey(file) || _contentInfoCache[file].DatedModified.IsOlder(fileInfo.LastWriteTime))
+                    if (!_contentInfoCache.ContainsKey(file) || _contentInfoCache[file].DateModified.IsOlder(fileInfo.LastWriteTime))
                     {
                         var info = AssetRegistry.GetAssetInfo(file) ?? Asset.GetAssetInfo(file);
 
@@ -164,7 +164,7 @@ class ContentBrowser : ViewModelBase, IDisposable
                 var info = _contentInfoCache[key];
 
                 writer.Write(key);
-                writer.Write(info.DatedModified.ToBinary());
+                writer.Write(info.DateModified.ToBinary());
                 writer.Write(info.Icon.Length);
                 writer.Write(info.Icon);
             }
