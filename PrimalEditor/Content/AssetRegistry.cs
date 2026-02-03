@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using System.Windows.Media;
 
 namespace PrimalEditor.Content;
 
@@ -81,7 +80,7 @@ static class AssetRegistry
                 var info = Asset.GetAssetInfo(file);
                 Debug.Assert(info != null);
                 // TODO: Exception here when creating a new Asset.
-                info.RegisterTime = DateTime.Now;
+                //info.RegisterTime = DateTime.Now;
                 _assetDictionary[file] = info;
 
                 Debug.Assert(_assetDictionary.ContainsKey(file));

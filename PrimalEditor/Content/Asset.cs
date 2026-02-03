@@ -132,6 +132,7 @@ abstract class Asset : ViewModelBase
         }
 
         writer.Write(SourcePath ?? "");
+        writer.Write(Icon.Length);
         writer.Write(Icon);
     }
 

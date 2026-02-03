@@ -2,14 +2,85 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 
 
 namespace PrimalEditor.Content;
+
+class DataSizeToStringConverter : IValueConverter
+{
+    private static readonly string[] _sizeSuffixes = { "B", "KB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+
+    static string SizeSuffix(long value, int decimalPlaces = 1)
+    {
+        if (value <= 0 || decimalPlaces < 0) return string.Empty;
+
+        int mag = (int) Math.Log(value, 1024);
+
+        decimal adjustedSize = (decimal) value / (1L << (mag * 10));
+
+        if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
+        {
+            mag += 1;
+            adjustedSize /= 1024;
+        }
+
+        return string.Format("{0:n" + decimalPlaces + "} {1}", adjustedSize, _sizeSuffixes[mag]);
+    }
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return (value is long size) ? SizeSuffix(size, 0) : null;
+    }
+
+    public object ConvertBack(object value, Type targetType, object paramater, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+class PlainView : ViewBase
+{
+    public static readonly DependencyProperty ItemContainerStyleProperty = ItemsControl.ItemContainerStyleProperty.AddOwner(typeof(PlainView));
+
+    public Style ItemContainerStyle
+    {
+        get { return (Style)GetValue(ItemContainerStyleProperty); }
+        set { SetValue(ItemContainerStyleProperty, value); }
+    }
+
+    public static readonly DependencyProperty ItemTemplateProperty = ItemsControl.ItemTemplateProperty.AddOwner(typeof(PlainView));
+
+    public DataTemplate ItemTemplate
+    {
+        get { return (DataTemplate)GetValue(ItemTemplateProperty); }
+        set { SetValue(ItemTemplateProperty, value); }
+    }
+
+    public static readonly DependencyProperty ItemWidthProperty = WrapPanel.ItemWidthProperty.AddOwner(typeof(PlainView));
+
+    public double ItemWidth
+    {
+        get { return (double)GetValue(ItemWidthProperty); }
+        set { SetValue(ItemWidthProperty, value); }
+    }
+
+    public static readonly DependencyProperty ItemHeightProperty = WrapPanel.ItemHeightProperty.AddOwner(typeof(PlainView));
+
+    public double ItemHeight
+    {
+        get { return (double)GetValue(ItemHeightProperty); }
+        set { SetValue(ItemHeightProperty, value); }
+    }
+
+    protected override object DefaultStyleKey => new ComponentResourceKey(GetType(), "PlainViewResourceId");
+}
 
 public partial class ContentBrowserView : UserControl
 {
