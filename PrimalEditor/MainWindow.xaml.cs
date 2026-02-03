@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+
 using PrimalEditor.Content;
 using PrimalEditor.GameProject;
 
@@ -93,7 +94,7 @@ namespace PrimalEditor
 
                 Debug.Assert(project != null);
 
-                AssetRegistry.Reset(project.ContentPath);
+                ContentWatcher.Reset(project.ContentPath, project.Path);
 
                 DataContext = project;
             }

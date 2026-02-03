@@ -15,48 +15,8 @@ static class AssetRegistry
     private static DelayEventTimer _refreshTimer = new DelayEventTimer(TimeSpan.FromMicroseconds(250));
     private static readonly Dictionary<string, AssetInfo> _assetDictionary = new Dictionary<string, AssetInfo>();
     private static readonly ObservableCollection<AssetInfo> _assets = new ObservableCollection<AssetInfo>();
-    private static readonly FileSystemWatcher _contentWatcher = new FileSystemWatcher()
-    {
-        IncludeSubdirectories = true,
-        NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite
-    };
 
     public static ReadOnlyObservableCollection<AssetInfo> Assets { get; } = new ReadOnlyObservableCollection<AssetInfo>(_assets);
-
-    private static async void OnContentModified(object sender, FileSystemEventArgs e)
-    {
-        if (Path.GetExtension(e.FullPath) != Asset.AssetFileExtension) return;
-
-        await Application.Current.Dispatcher.BeginInvoke(new Action(() => _refreshTimer.Trigger(e)));
-    }
-
-    private static void Refresh(object sender, DelayEventTimerArgs e)
-    {
-        foreach (var item in e.Data)
-        {
-            if (!(item is FileSystemEventArgs eventArgs)) continue;
-
-            if (eventArgs.ChangeType == WatcherChangeTypes.Deleted)
-            {
-                UnregisterAsset(eventArgs.FullPath);
-            }
-            else
-            {
-                RegisterAsset(eventArgs.FullPath);
-                if (eventArgs.ChangeType == WatcherChangeTypes.Renamed)
-                {
-                    _assetDictionary.Keys.Where(key => !File.Exists(key)).ToList().ForEach(file => UnregisterAsset(file));
-                }
-            }
-        }
-    }
-
-    public static void Clear()
-    {
-        _contentWatcher.EnableRaisingEvents = false;
-        _assetDictionary.Clear();
-        _assets.Clear();
-    }
 
     private static void UnregisterAsset(string file)
     {
@@ -80,7 +40,7 @@ static class AssetRegistry
                 var info = Asset.GetAssetInfo(file);
                 Debug.Assert(info != null);
                 // TODO: Exception here when creating a new Asset.
-                //info.RegisterTime = DateTime.Now;
+                info.RegisterTime = DateTime.Now;
                 _assetDictionary[file] = info;
 
                 Debug.Assert(_assetDictionary.ContainsKey(file));
@@ -107,29 +67,35 @@ static class AssetRegistry
         }
     }
 
+    private static void OnContentModified(object sender, ContentModifiedEventArgs e)
+    {
+        if (ContentHelper.IsDirectory(e.FullPath))
+        {
+            RegisterAllAssets(e.FullPath);
+        }
+        else if (File.Exists(e.FullPath))
+        {
+            RegisterAsset(e.FullPath);
+        }
+
+        _assets.Where(x => !File.Exists(x.FullPath)).ToList().ForEach(x => UnregisterAsset(x.FullPath));
+    }
+
     public static void Reset(string contentFolder)
     {
-        Clear();
+        ContentWatcher.ContentModified -= OnContentModified;
+
+        _assetDictionary.Clear();
+        _assets.Clear();
 
         Debug.Assert(Directory.Exists(contentFolder));
 
         RegisterAllAssets(contentFolder);
 
-        _contentWatcher.Path = contentFolder;
-        _contentWatcher.EnableRaisingEvents = true;
+        ContentWatcher.ContentModified += OnContentModified;
     }
 
     public static AssetInfo GetAssetInfo(string file) => _assetDictionary.ContainsKey(file) ? _assetDictionary[file] : null;
 
     public static AssetInfo GetAssetInfo(Guid guid) => _assets.FirstOrDefault(x => x.Guid == guid);
-
-    static AssetRegistry()
-    {
-        _contentWatcher.Changed += OnContentModified;
-        _contentWatcher.Created += OnContentModified;
-        _contentWatcher.Deleted += OnContentModified;
-        _contentWatcher.Renamed += OnContentModified;
-
-        _refreshTimer.Triggered += Refresh;
-    }
 }
