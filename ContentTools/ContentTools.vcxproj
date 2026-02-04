@@ -11,11 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FbxImporter.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="PrimitiveMesh.h" />
     <ClInclude Include="ToolsCommon.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FbxImporter.cpp" />
     <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="PrimitiveMesh.cpp" />
   </ItemGroup>
@@ -52,6 +54,12 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.9\lib\x64\debug;</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseEditor|x64'">
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.9\lib\x64\release;</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -62,13 +70,15 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Engine\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Engine\Common;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.9\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile />
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseEditor|x64'">
@@ -83,7 +93,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Engine\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Engine\Common;C:\Program Files\Autodesk\FBX\FBX SDK\2020.3.9\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile />
     </ClCompile>
     <Link>
@@ -92,6 +102,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);libfbxsdk-md.lib;libxml2-md.lib;zlib-md.lib;</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
