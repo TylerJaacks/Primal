@@ -1,5 +1,4 @@
-﻿using PrimalEditor.GameProject;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -10,6 +9,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 
+using PrimalEditor.GameProject;
 
 namespace PrimalEditor.Content;
 
@@ -82,11 +82,37 @@ class PlainView : ViewBase
     protected override object DefaultStyleKey => new ComponentResourceKey(GetType(), "PlainViewResourceId");
 }
 
-public partial class ContentBrowserView : UserControl
+public partial class ContentBrowserView : UserControl, IDisposable
 {
+    public SelectionMode SelectionMode 
+    {
+        get => (SelectionMode) GetValue(SelectionModeProperty);
+        set => SetValue(SelectionModeProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectionModeProperty =
+        DependencyProperty.Register(nameof(SelectionMode), typeof(SelectionMode), typeof(ContentBrowserView), new PropertyMetadata(SelectionMode.Extended));
+
+    public FileAccess FileAccess
+    {
+        get => (FileAccess) GetValue(FileAccessProperty);
+        set => SetValue(FileAccessProperty, value);
+    }
+
+    public static readonly DependencyProperty FileAccessProperty =
+        DependencyProperty.Register(nameof(FileAccess), typeof(FileAccess), typeof(ContentBrowserView), new PropertyMetadata(FileAccess.ReadWrite));
+
+    internal ContentInfo SelectedItem
+    {
+        get => (ContentInfo)GetValue(SelectedItemProperty);
+        set => SetValue(SelectedItemProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedItemProperty =
+        DependencyProperty.Register(nameof(SelectedItem), typeof(ContentInfo), typeof(ContentBrowserView), new PropertyMetadata((ContentInfo)null));
+
     private string _sortedProperty = nameof(ContentInfo.FileName);
     private ListSortDirection _sortDirection;
-
 
     public ContentBrowserView()
     {
@@ -250,5 +276,23 @@ public partial class ContentBrowserView : UserControl
         var vm = DataContext as ContentBrowser;
 
         vm.SelectedFolder = (sender as Button).DataContext as string;
+    }
+
+    private void OnFolderContent_ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var item = folderListView.SelectedItem as ContentInfo;
+
+        SelectedItem = item?.IsDirectory == true ? null : item;
+    }
+
+    public void Dispose()
+    {
+        if (Application.Current?.MainWindow != null)
+        {
+            Application.Current.MainWindow.DataContextChanged -= OnProjectChanged;
+        }
+
+        (DataContext as ContentBrowser)?.Dispose();
+        DataContext = null;
     }
 }

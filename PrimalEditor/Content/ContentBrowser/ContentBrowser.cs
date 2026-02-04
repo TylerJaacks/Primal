@@ -39,7 +39,7 @@ sealed class ContentInfo
 
 class ContentBrowser : ViewModelBase, IDisposable
 {
-    private static readonly DelayEventTimer _refreshTimer = new DelayEventTimer(TimeSpan.FromMicroseconds(250));
+    private readonly DelayEventTimer _refreshTimer = new DelayEventTimer(TimeSpan.FromMicroseconds(250));
 
     public string ContentFolder { get; }
 

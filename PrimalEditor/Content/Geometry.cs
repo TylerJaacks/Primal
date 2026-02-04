@@ -414,7 +414,9 @@ class Geometry : Asset
             {
                 Debug.Assert(lodGroup.LODs.Any());
 
-                string meshFileName = ContentHelper.SanitizeFileName(path + fileName + "_" + lodGroup.LODs[0].Name + AssetFileExtension);
+                string meshFileName = ContentHelper.SanitizeFileName(_lodGroup.Count > 1 ? 
+                    path + fileName + "_" + lodGroup.LODs[0].Name + AssetFileExtension : 
+                    path + fileName + AssetFileExtension);
 
                 Guid = Guid.NewGuid();
 
