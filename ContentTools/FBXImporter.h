@@ -31,50 +31,7 @@ class fbx_context
         ZeroMemory(this, sizeof(fbx_context));
     }
 
-    void get_scene(FbxNode *root)
-    {
-        assert(is_valid());
-
-        if (!root)
-        {
-            root = _fbx_scene->GetRootNode();
-
-            if (!root)
-                return;
-
-            const s32 num_nodes{root->GetChildCount()};
-
-            for (s32 i{0}; i < num_nodes; ++i)
-            {
-                FbxNode *node{root->GetChild(i)};
-
-                if (!node)
-                    continue;
-
-                if (node->GetMesh())
-                {
-                    lod_group lod{};
-
-                    get_mesh(node, lod.meshes);
-
-                    if (lod.meshes.size())
-                    {
-                        lod.name = lod.meshes[0].name;
-
-                        _scene->lod_groups.emplace_back(lod);
-                    }
-                }
-                else if (node->GetLodGroup())
-                {
-                    get_lod_group(node);
-                }
-                else
-                {
-                    get_scene(node);
-                }
-            }
-        }
-    }
+    void get_scene(FbxNode *root = nullptr);
 
     constexpr bool is_valid() const
     {
@@ -92,6 +49,7 @@ class fbx_context
 
     void get_mesh(FbxNode *node, utl::vector<mesh> &meshes);
     void get_lod_group(FbxNode *node);
+    bool get_mesh_data(FbxMesh *fbx_mesh, mesh &m);
 
     scene *_scene{nullptr};
     scene_data *_scene_data{nullptr};
