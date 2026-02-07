@@ -240,16 +240,16 @@ void create_uv_sphere(scene &scene, const primitive_init_info &info)
     scene.lod_groups.emplace_back(lod);
 }
 
-void create_cube(scene &scene, const primitive_init_info &info)
+void create_cube(scene &, const primitive_init_info &)
 {
 }
-void create_ico_sphere(scene &scene, const primitive_init_info &info)
+void create_ico_sphere(scene &, const primitive_init_info &)
 {
 }
-void create_cylinder(scene &scene, const primitive_init_info &info)
+void create_cylinder(scene &, const primitive_init_info &)
 {
 }
-void create_capsule(scene &scene, const primitive_init_info &info)
+void create_capsule(scene &, const primitive_init_info &)
 {
 }
 } // namespace
