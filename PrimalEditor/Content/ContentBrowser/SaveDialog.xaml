@@ -13,7 +13,7 @@
             <RowDefinition/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <local:ContentBrowserView x:Name="contentBrowserView" SelectionMode="Single" FileAccess="Write" MouseDoubleClick="OnContentBrowser_Mouse_DoubleClick"/>
+        <local:ContentBrowserView x:Name="contentBrowserView" SelectionMode="Single" FileAccess="Write" MouseDoubleClick="OnContentBrowser_Mouse_DoubleClick" AllowDrop="False"/>
 
         <Border Grid.Row="1" Background="{StaticResource Editor.Window.GrayBrush3}">
             <StackPanel>

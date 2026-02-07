@@ -33,6 +33,8 @@ namespace PrimalEditor.GameProject
 
         public string ContentPath => $@"{Path}Content";
 
+        public string TempFolder => $@"{Path}.Primal\Temp\";
+
         private int _buildConfig;
 
         [DataMember]
@@ -259,6 +261,16 @@ namespace PrimalEditor.GameProject
             UndoRedo.Reset();
 
             Logger.Clear();
+
+            DeleteTempFolder();
+        }
+
+        private void DeleteTempFolder()
+        {
+            if (Directory.Exists(TempFolder))
+            {
+                Directory.Delete(TempFolder, true);
+            }
         }
 
         public static void Save(Project project)

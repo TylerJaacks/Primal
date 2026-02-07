@@ -61,6 +61,8 @@ abstract class Asset : ViewModelBase
 
     public byte[] Hash { get; protected set; }
 
+    public abstract void Import(string file);
+
     public abstract IEnumerable<string> Save(string file);
 
     private static AssetInfo GetAssetInfo(BinaryReader reader)

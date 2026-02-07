@@ -25,7 +25,7 @@ class fbx_context
 
     ~fbx_context()
     {
-        _fbx_manager->Destroy();
+        _fbx_scene->Destroy();
         _fbx_manager->Destroy();
 
         ZeroMemory(this, sizeof(fbx_context));

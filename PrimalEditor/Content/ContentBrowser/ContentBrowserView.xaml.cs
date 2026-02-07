@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
-
+using PrimalEditor.Common;
 using PrimalEditor.GameProject;
 
 namespace PrimalEditor.Content;
@@ -121,6 +121,8 @@ public partial class ContentBrowserView : UserControl, IDisposable
         InitializeComponent();
 
         Loaded += OnContentBrowserLoaded;
+
+        AllowDrop = true;
     }
 
     private void OnContentBrowserLoaded(object sender, RoutedEventArgs e)
@@ -294,5 +296,22 @@ public partial class ContentBrowserView : UserControl, IDisposable
 
         (DataContext as ContentBrowser)?.Dispose();
         DataContext = null;
+    }
+
+    private void OnFolderContent_ListView_Drop(object sender, DragEventArgs e)
+    {
+        var vm = DataContext as ContentBrowser;
+
+        if (vm.SelectedFolder != null && e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            var files = (string[]) e.Data.GetData(DataFormats.FileDrop);
+
+            if (files?.Length > 0 && Directory.Exists(vm.SelectedFolder))
+            {
+                _ = ContentHelper.ImportFilesAsync(files, vm.SelectedFolder);
+
+                e.Handled = true;
+            }
+        }
     }
 }

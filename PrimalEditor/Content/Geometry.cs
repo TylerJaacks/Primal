@@ -1,6 +1,4 @@
-﻿using PrimalEditor.Common;
-using PrimalEditor.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -10,6 +8,11 @@ using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+
+using PrimalEditor.Common;
+using PrimalEditor.DLLWrappers;
+using PrimalEditor.GameProject;
+using PrimalEditor.Utilities;
 
 namespace PrimalEditor.Content;
 
@@ -272,9 +275,58 @@ public class GeometryImportSettings : ViewModelBase
 
 class Geometry : Asset
 {
+    private readonly object _lock = new();
+
     private readonly List<LODGroup> _lodGroup = new();
 
     public GeometryImportSettings ImportSettings { get; } = new GeometryImportSettings();
+
+    public override void Import(string file)
+    {
+        Debug.Assert(File.Exists(file));
+        Debug.Assert(!string.IsNullOrEmpty(FullPath));
+
+        var ext = Path.GetExtension(file).ToLower();
+
+        SourcePath = file;
+
+        try
+        {
+            if (ext == ".fbx")
+            {
+                ImportFbx(file);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            
+            var msg = $"Failed to read {file} for import.";
+            
+            Debug.WriteLine(msg);
+            Logger.Log(MessageType.Error, msg);
+        }
+    }
+
+    private void ImportFbx(string file)
+    {
+        Logger.Log(MessageType.Info, $"Importing FBX file {file}");
+        
+        var tempPath = Application.Current.Dispatcher.Invoke(() => Project.Current.TempFolder);
+        
+        if (string.IsNullOrEmpty(tempPath)) return;
+
+        lock (_lock)
+        {
+            if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+        }
+
+        var tempFile = $"{tempPath}{ContentHelper.GetRandomString()}.fbx";
+
+        File.Copy(file, tempFile, true);
+
+        ContentToolsAPI.ImportFbx(tempFile, this);
+    }
 
     public LODGroup GetLODGroup(int lodGroup = 0)
     {
@@ -468,7 +520,9 @@ class Geometry : Asset
 
     private byte[] GenerateIcon(MeshLOD lod)
     {
-        var width = 90 * 4;
+        var width = ContentInfo.IconWidth * 4;
+
+        using var memStream = new MemoryStream();
 
         BitmapSource bmp = null;
 
@@ -477,17 +531,15 @@ class Geometry : Asset
             bmp = Editors.GeometryView.RenderToBitmap(new Editors.MeshRenderer(lod, null), width, width);
 
             bmp = new TransformedBitmap(bmp, new ScaleTransform(0.25, 0.25, 0.5, 0.5));
+
+            memStream.SetLength(0);
+
+            var encoder = new PngBitmapEncoder();
+
+            encoder.Frames.Add(BitmapFrame.Create(bmp));
+
+            encoder.Save(memStream);
         });
-
-        using var memStream = new MemoryStream();
-
-        memStream.SetLength(0);
-
-        var encoder = new PngBitmapEncoder();
-
-        encoder.Frames.Add(BitmapFrame.Create(bmp));
-
-        encoder.Save(memStream);
 
         return memStream.ToArray();
     }

@@ -14,6 +14,7 @@ namespace PrimalEditor.Content;
 sealed class ContentInfo
 {
     public static int IconWidth => 90;
+    public static int IconHeight => 4;
     public byte[] Icon { get; }
     public byte[] IconSmall { get; }
     public string FullPath { get; set; }

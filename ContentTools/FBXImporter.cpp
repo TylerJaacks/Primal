@@ -40,7 +40,7 @@ void fbx_context::load_fbx_file(const char *file)
 {
     assert(_fbx_manager && !_fbx_scene);
 
-    _fbx_scene = FbxScene::Create(_fbx_manager, "Import Scene");
+    _fbx_scene = FbxScene::Create(_fbx_manager, "Importer Scene");
 
     if (!_fbx_scene)
     {
@@ -49,7 +49,7 @@ void fbx_context::load_fbx_file(const char *file)
 
     FbxImporter *importer{FbxImporter::Create(_fbx_manager, "Importer")};
 
-    if (!importer && importer->Initialize(file, -1, _fbx_manager->GetIOSettings()) && importer->Import(_fbx_scene))
+    if (!(importer && importer->Initialize(file, -1, _fbx_manager->GetIOSettings()) && importer->Import(_fbx_scene)))
     {
         return;
     }
@@ -66,14 +66,17 @@ void fbx_context::get_scene(FbxNode *root)
     if (!root)
     {
         root = _fbx_scene->GetRootNode();
+
         if (!root)
             return;
     }
 
     const s32 num_nodes{root->GetChildCount()};
+
     for (s32 i{0}; i < num_nodes; ++i)
     {
         FbxNode *node{root->GetChild(i)};
+
         if (!node)
             continue;
 
@@ -126,6 +129,8 @@ void fbx_context::get_mesh(FbxNode *node, utl::vector<mesh> &meshes)
             meshes.emplace_back(m);
         }
     }
+
+    get_scene(node);
 }
 
 void fbx_context::get_lod_group(FbxNode *node)
@@ -277,24 +282,22 @@ bool fbx_context::get_mesh_data(FbxMesh *fbx_mesh, mesh &m)
     }
 
     FbxStringList uv_names;
-
     fbx_mesh->GetUVSetNames(uv_names);
-
     const s32 uv_set_count{uv_names.GetCount()};
-
+    // NOTE: it's ok if we don't have a uv set. For example, some emissive objects don't need a uv map
     m.uv_sets.resize(uv_set_count);
 
     for (s32 i{0}; i < uv_set_count; ++i)
     {
         FbxArray<FbxVector2> uvs;
-
         if (fbx_mesh->GetPolygonVertexUVs(uv_names.GetStringAt(i), uvs))
         {
             const s32 num_uvs{uvs.Size()};
-
-            for (s32 j{0}; i < num_uvs; ++j)
+            for (s32 j{0}; j < num_uvs; ++j)
             {
-                m.uv_sets[i].emplace_back((f32)uvs[j][0], (f32)uvs[j][1]);
+                // Assuming FBX UVs always have their origin at the bottom-left, the V-axis
+                // should be flipped, since DirectX uses the upper-left corner as the origin.
+                m.uv_sets[i].emplace_back((f32)uvs[j][0], 1.f - (f32)uvs[j][1]);
             }
         }
     }
